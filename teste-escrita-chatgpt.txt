@@ -1,3 +1,0 @@
-Teste de escrita realizado pelo conector do ChatGPT.
-
-Este arquivo foi criado para confirmar que a integração consegue gravar no repositório.
