@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7eee8">
+<title>Conferir peças — Guarda-Roupa da Liv</title>
+<style>
+:root{--ink:#423630;--muted:#83756e;--rose:#b86f70;--pale:#f4e3df;--cream:#fbf7f3;--line:#eaded7;--green:#e8f0e6}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:28px 18px;background:linear-gradient(135deg,#f5e4df,#f8eee8 60%,#eee6d9);border-bottom:1px solid var(--line)}
+.wrap,main{max-width:900px;margin:auto}h1{font:500 clamp(2rem,5vw,2.8rem) Georgia,serif;margin:6px 0}.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;color:#986a65;font-weight:750}.subtitle{color:#76645c;line-height:1.5;margin:0}
+main{padding:22px 16px 48px}.intro,.toolbar,.item{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}.intro p{margin:0 0 8px;line-height:1.5}.intro p:last-child{margin-bottom:0}.muted{color:var(--muted);font-size:.9rem}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.progress{font-weight:700;margin-right:auto}
+button{font:inherit;font-weight:650;border-radius:11px;border:1px solid var(--line);padding:10px 13px;background:white;color:var(--ink);cursor:pointer}.primary{background:var(--rose);border-color:var(--rose);color:white}.soft{background:var(--pale);border-color:transparent}
+.item h2{font-size:1.03rem;margin:0 0 4px}.meta{font-size:.82rem;color:var(--muted);margin-bottom:12px}.choices{display:flex;gap:8px;flex-wrap:wrap}.choice{display:flex;align-items:center;gap:7px;border:1px solid var(--line);padding:9px 11px;border-radius:11px;cursor:pointer}.choice:has(input:checked){background:#f8ece8;border-color:var(--rose)}input[type=radio]{accent-color:var(--rose)}label.note{display:grid;gap:5px;margin-top:12px;font-size:.84rem;font-weight:650}textarea{font:inherit;border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical;width:100%;min-height:58px}
+footer{text-align:center;color:var(--muted);font-size:.8rem;padding:20px}
+@media(max-width:540px){.toolbar>*{width:100%}.progress{margin-bottom:4px}.choice{flex:1;justify-content:center;font-size:.88rem}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="eyebrow">Guarda-Roupa Digital da Liv</div><h1>Conferir peças ♡</h1><p class="subtitle">Marque se cada identificação corresponde à peça que você está conferindo.</p></div></header>
+<main>
+<section class="intro">
+<p><strong>Como usar:</strong> para cada item, selecione <em>Corresponde</em>, <em>Não corresponde</em> ou <em>Tenho dúvida</em>. Você também pode deixar uma observação.</p>
+<p class="muted">Esta primeira etapa contém 10 identificações do catálogo. As fotos originais ainda não estão anexadas a esta página; use-a enquanto compara com as fotos que você tem. Suas respostas ficam salvas neste navegador e podem ser exportadas em JSON para você me enviar aqui.</p>
+</section>
+<div class="toolbar"><span class="progress" id="progress">0 de 10 conferidas</span><button class="soft" id="clearBtn" type="button">Limpar respostas</button><button class="primary" id="exportBtn" type="button">Exportar respostas (JSON)</button></div>
+<section id="items"></section>
+<footer>As respostas ficam neste navegador até serem exportadas. Feito com carinho para a Liv ♡</footer>
+</main>
+<script>
+(function(){
+const KEY='guardaRoupaLiv.conferencia.v1';
+const pieces=[
+{id:'body-carters-rosa',name:'Body rosa com babado e borboleta',category:'Body',size:"18 meses",brand:"Carter's"},
+{id:'body-carters-verde',name:'Body verde com bolinhas',category:'Body',size:"18 meses",brand:"Carter's"},
+{id:'body-menta-bebe-papai',name:'Body verde-menta Bebê do Papai',category:'Body',size:'9–12 meses',brand:'Bebê do Papai'},
+{id:'short-preto-fadinhas',name:'Short preto estampado com fadinhas',category:'Short',size:'Pendente',brand:'Pendente'},
+{id:'pijama-lilas-branco',name:'Conjunto de pijama lilás e branco',category:'Pijama',size:'Pendente',brand:'Pendente'},
+{id:'body-branco-floral-azul',name:'Body branco floral azul',category:'Body',size:'12 meses',brand:'Pendente'},
+{id:'blusa-preta-lindika',name:'Blusa preta de manga longa',category:'Blusa',size:'Pendente',brand:'Lindika'},
+{id:'vestido-branco-sereias',name:'Vestido branco com estampa de sereias',category:'Vestido',size:'Pendente',brand:'Pendente'},
+{id:'body-rosa-love-to-smile',name:'Body rosa “Love to Smile”',category:'Body',size:'Pendente',brand:'Pendente'},
+{id:'jardineira-jeans-azul',name:'Jardineira jeans azul',category:'Jardineira',size:'Pendente',brand:'Pendente'}
+];
+const labels={match:'Corresponde',mismatch:'Não corresponde',unsure:'Tenho dúvida'};
+let answers={};
+try{answers=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){answers={};}
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function save(){try{localStorage.setItem(KEY,JSON.stringify(answers));}catch(e){alert('Não foi possível salvar no navegador. Exporte as respostas para não perdê-las.');}updateProgress();}
+function updateProgress(){const n=pieces.filter(p=>answers[p.id]?.status).length;document.getElementById('progress').textContent=n+' de '+pieces.length+' conferidas';}
+function render(){document.getElementById('items').innerHTML=pieces.map((p,i)=>{const a=answers[p.id]||{};return '<article class="item"><h2>'+(i+1)+'. '+esc(p.name)+'</h2><div class="meta">ID: '+esc(p.id)+' · '+esc(p.category)+' · Tamanho: '+esc(p.size)+' · Marca: '+esc(p.brand)+'</div><div class="choices">'+[['match','Corresponde'],['mismatch','Não corresponde'],['unsure','Tenho dúvida']].map(([v,l])=>'<label class="choice"><input type="radio" name="status-'+esc(p.id)+'" value="'+v+'" '+(a.status===v?'checked':'')+'> '+l+'</label>').join('')+'</div><label class="note">Observação (opcional)<textarea data-note="'+esc(p.id)+'" placeholder="Ex.: a foto é de outra cor, tamanho diferente…">'+esc(a.note||'')+'</textarea></label></article>';}).join('');}
+document.getElementById('items').addEventListener('change',e=>{if(e.target.matches('input[type=radio]')){const id=e.target.name.slice(7);answers[id]=answers[id]||{};answers[id].status=e.target.value;save();}});
+document.getElementById('items').addEventListener('input',e=>{if(e.target.matches('textarea[data-note]')){const id=e.target.dataset.note;answers[id]=answers[id]||{};answers[id].note=e.target.value;save();}});
+document.getElementById('exportBtn').addEventListener('click',()=>{const out={project:'Guarda-Roupa Digital da Liv',exportedAt:new Date().toISOString(),answers:pieces.map(p=>({id:p.id,name:p.name,status:answers[p.id]?.status||'not-reviewed',statusLabel:labels[answers[p.id]?.status]||'Não conferida',note:answers[p.id]?.note||''}))};const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='respostas-conferencia-liv.json';a.click();URL.revokeObjectURL(url);});
+document.getElementById('clearBtn').addEventListener('click',()=>{if(confirm('Apagar todas as respostas desta conferência?')){answers={};save();render();}});
+render();updateProgress();
+})();
+</script>
+</body>
+</html>
