@@ -1,19 +1,32 @@
 # Guarda-Roupa Digital da Liv
 
-Primeira versão estática do catálogo, responsiva e em um único arquivo HTML.
+Catálogo das roupinhas da Liv: fotos, tamanhos, marcas e se cada peça ainda serve.
 
-## O que já funciona
-- Cadastro, edição e exclusão de peças.
-- Busca por nome, marca, categoria, tamanho e observações.
-- Filtros por categoria, tamanho e situação (ainda serve / não serve / a conferir).
-- Upload da foto original da peça pelo navegador.
-- Catálogo inicial com três bodies individualmente identificados e as correções confirmadas.
+**Site:** https://vivianvb.github.io/guarda-roupa-liv/
 
-## Limitação importante desta primeira versão
-Os dados e fotos são salvos no armazenamento local do navegador. Isso não sincroniza entre dispositivos e pode ser perdido se os dados do navegador forem apagados. Para sincronização futura, será necessário adicionar armazenamento compartilhado.
+## Páginas
 
-## Publicar no GitHub Pages
-1. Envie `index.html` para a raiz do repositório `VivianVB/guarda-roupa-liv`.
-2. No GitHub, abra **Settings → Pages**.
-3. Em **Build and deployment**, selecione **Deploy from a branch**, branch `main`, pasta `/ (root)` e salve.
-4. Aguarde a publicação indicada na tela do GitHub Pages.
+| Página | Para que serve |
+| --- | --- |
+| [`index.html`](index.html) | Catálogo principal: cadastrar, editar, buscar e filtrar peças. |
+| [`revisao.html`](revisao.html) | Revisar as 80 fotos originais e dizer a qual peça do catálogo cada uma corresponde. |
+| [`conferir-pecas.html`](conferir-pecas.html) | Conferência rápida das 10 primeiras peças identificadas (sem fotos). |
+
+## Estrutura
+
+```
+index.html            catálogo
+revisao.html          revisão das fotos
+conferir-pecas.html   conferência por texto
+fotos/                80 fotos originais (nomes preservados)
+fotos/inventario.json lista das fotos + sugestões provisórias de correspondência
+PROJETO.md            contexto, regras, catálogo e próximos passos
+```
+
+## Limitação atual
+
+Tudo o que se edita nas páginas fica salvo **só no navegador** em que foi feito (`localStorage`). Não sincroniza entre aparelhos. Para guardar ou compartilhar, use os botões de exportar (JSON/CSV).
+
+## Publicação
+
+O GitHub Pages publica a branch `main`, pasta raiz (**Settings → Pages → Deploy from a branch**). Ao adicionar fotos novas em `fotos/`, inclua também uma entrada em `fotos/inventario.json` para que apareçam na revisão.
