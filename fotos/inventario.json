@@ -2,401 +2,481 @@
     {
         "photo":  "1000217088.jpg",
         "path":  "fotos/1000217088.jpg",
-        "candidate_match":  "Blusa verde-menta sem mangas com tule/perolinhas nos ombros (não confundir com o body verde-menta) — mesma peça de 1000217091.jpg?"
+        "candidate_match":  "Blusa verde-menta sem mangas com tule/perolinhas nos ombros (não confundir com o body verde-menta) — mesma peça de 1000217091.jpg?",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217089.jpg",
         "path":  "fotos/1000217089.jpg",
-        "candidate_match":  "Calça floral branca — possível duplicata de 1000217090.jpg"
+        "candidate_match":  "Calça floral branca — possível duplicata de 1000217090.jpg",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217090.jpg",
         "path":  "fotos/1000217090.jpg",
-        "candidate_match":  "Calça floral branca — possível duplicata de 1000217089.jpg"
+        "candidate_match":  "Calça floral branca — possível duplicata de 1000217089.jpg",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217091.jpg",
         "path":  "fotos/1000217091.jpg",
-        "candidate_match":  "Blusa verde-menta sem mangas com tule/perolinhas nos ombros — mesma peça de 1000217088.jpg?"
+        "candidate_match":  "Blusa verde-menta sem mangas com tule/perolinhas nos ombros — mesma peça de 1000217088.jpg?",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217092.jpg",
         "path":  "fotos/1000217092.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217093.jpg",
         "path":  "fotos/1000217093.jpg",
-        "candidate_match":  "Possível blusa preta de manga longa Lindika (ver também 1000217171.jpg)"
+        "candidate_match":  "Possível blusa preta de manga longa Lindika (ver também 1000217171.jpg)",
+        "candidate_id":  "blusa-preta-lindika"
     },
     {
         "photo":  "1000217094.jpg",
         "path":  "fotos/1000217094.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217095.jpg",
         "path":  "fotos/1000217095.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217099.jpg",
         "path":  "fotos/1000217099.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217100.jpg",
         "path":  "fotos/1000217100.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217104.jpg",
         "path":  "fotos/1000217104.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217105.jpg",
         "path":  "fotos/1000217105.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217106.jpg",
         "path":  "fotos/1000217106.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217107.jpg",
         "path":  "fotos/1000217107.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217111.jpg",
         "path":  "fotos/1000217111.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217112.jpg",
         "path":  "fotos/1000217112.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217113.jpg",
         "path":  "fotos/1000217113.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217114.jpg",
         "path":  "fotos/1000217114.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217115.jpg",
         "path":  "fotos/1000217115.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217116.jpg",
         "path":  "fotos/1000217116.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217121.jpg",
         "path":  "fotos/1000217121.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217123.jpg",
         "path":  "fotos/1000217123.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217124.jpg",
         "path":  "fotos/1000217124.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217125.jpg",
         "path":  "fotos/1000217125.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217126.jpg",
         "path":  "fotos/1000217126.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217127.jpg",
         "path":  "fotos/1000217127.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217128.jpg",
         "path":  "fotos/1000217128.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217129.jpg",
         "path":  "fotos/1000217129.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217136.jpg",
         "path":  "fotos/1000217136.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217137.jpg",
         "path":  "fotos/1000217137.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217138.jpg",
         "path":  "fotos/1000217138.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217139.jpg",
         "path":  "fotos/1000217139.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217145.jpg",
         "path":  "fotos/1000217145.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217146.jpg",
         "path":  "fotos/1000217146.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217147.jpg",
         "path":  "fotos/1000217147.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217148.jpg",
         "path":  "fotos/1000217148.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217149.jpg",
         "path":  "fotos/1000217149.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217150.jpg",
         "path":  "fotos/1000217150.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217151.jpg",
         "path":  "fotos/1000217151.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217152.jpg",
         "path":  "fotos/1000217152.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217154.jpg",
         "path":  "fotos/1000217154.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217155.jpg",
         "path":  "fotos/1000217155.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217156.jpg",
         "path":  "fotos/1000217156.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217157.jpg",
         "path":  "fotos/1000217157.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217159.jpg",
         "path":  "fotos/1000217159.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217160.jpg",
         "path":  "fotos/1000217160.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217161.jpg",
         "path":  "fotos/1000217161.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217162.jpg",
         "path":  "fotos/1000217162.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217163.jpg",
         "path":  "fotos/1000217163.jpg",
-        "candidate_match":  "Possível short preto de fadinhas"
+        "candidate_match":  "Possível short preto de fadinhas",
+        "candidate_id":  "short-preto-fadinhas"
     },
     {
         "photo":  "1000217165.jpg",
         "path":  "fotos/1000217165.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217166.jpg",
         "path":  "fotos/1000217166.jpg",
-        "candidate_match":  "Possível body branco floral azul"
+        "candidate_match":  "Possível body branco floral azul",
+        "candidate_id":  "body-branco-floral-azul"
     },
     {
         "photo":  "1000217167.jpg",
         "path":  "fotos/1000217167.jpg",
-        "candidate_match":  "Possível body verde de bolinhas Carter\u0027s"
+        "candidate_match":  "Possível body verde de bolinhas Carter\u0027s",
+        "candidate_id":  "body-carters-verde"
     },
     {
         "photo":  "1000217171.jpg",
         "path":  "fotos/1000217171.jpg",
-        "candidate_match":  "Possível blusa preta de manga longa Lindika (ver também 1000217093.jpg)"
+        "candidate_match":  "Possível blusa preta de manga longa Lindika (ver também 1000217093.jpg)",
+        "candidate_id":  "blusa-preta-lindika"
     },
     {
         "photo":  "1000217172.jpg",
         "path":  "fotos/1000217172.jpg",
-        "candidate_match":  "Possível vestido branco de sereias"
+        "candidate_match":  "Possível vestido branco de sereias",
+        "candidate_id":  "vestido-branco-sereias"
     },
     {
         "photo":  "1000217173.jpg",
         "path":  "fotos/1000217173.jpg",
-        "candidate_match":  "Possível body “Love to Smile”"
+        "candidate_match":  "Possível body “Love to Smile”",
+        "candidate_id":  "body-rosa-love-to-smile"
     },
     {
         "photo":  "1000217176.jpg",
         "path":  "fotos/1000217176.jpg",
-        "candidate_match":  "Possível jardineira/peça jeans"
+        "candidate_match":  "Possível jardineira/peça jeans",
+        "candidate_id":  "jardineira-jeans-azul"
     },
     {
         "photo":  "1000217179.jpg",
         "path":  "fotos/1000217179.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217182.jpg",
         "path":  "fotos/1000217182.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217183.jpg",
         "path":  "fotos/1000217183.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217187.jpg",
         "path":  "fotos/1000217187.jpg",
-        "candidate_match":  "Possível body floral rosa e verde"
+        "candidate_match":  "Possível body floral rosa e verde",
+        "candidate_id":  "body-floral-rosa-verde"
     },
     {
         "photo":  "1000217190.jpg",
         "path":  "fotos/1000217190.jpg",
-        "candidate_match":  "Body bege com estampa animal — provavelmente peça nova"
+        "candidate_match":  "Body bege com estampa animal — provavelmente peça nova",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217193.jpg",
         "path":  "fotos/1000217193.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217198.jpg",
         "path":  "fotos/1000217198.jpg",
-        "candidate_match":  "Possível conjunto térmico cinza"
+        "candidate_match":  "Possível conjunto térmico cinza",
+        "candidate_id":  "conjunto-termico"
     },
     {
         "photo":  "1000217199.jpg",
         "path":  "fotos/1000217199.jpg",
-        "candidate_match":  "Possível calça de moletom rosa"
+        "candidate_match":  "Possível calça de moletom rosa",
+        "candidate_id":  "calca-moletom-rosa-pink"
     },
     {
         "photo":  "1000217204.jpg",
         "path":  "fotos/1000217204.jpg",
-        "candidate_match":  "Possível casaco rosa antigo com coelho"
+        "candidate_match":  "Possível casaco rosa antigo com coelho",
+        "candidate_id":  "casaco-aveludado-rosa-coelho"
     },
     {
         "photo":  "1000217205.jpg",
         "path":  "fotos/1000217205.jpg",
-        "candidate_match":  "Possível calça verde-petróleo"
+        "candidate_match":  "Possível calça verde-petróleo",
+        "candidate_id":  "calca-moletom-verde-petroleo"
     },
     {
         "photo":  "1000217206.jpg",
         "path":  "fotos/1000217206.jpg",
-        "candidate_match":  "Possível blusa de capivara"
+        "candidate_match":  "Possível blusa de capivara",
+        "candidate_id":  "blusa-moletom-capivara"
     },
     {
         "photo":  "1000217207.jpg",
         "path":  "fotos/1000217207.jpg",
-        "candidate_match":  "Possível poncho de crochê"
+        "candidate_match":  "Possível poncho de crochê",
+        "candidate_id":  "poncho-croche-rosa-mesclado"
     },
     {
         "photo":  "1000217208.jpg",
         "path":  "fotos/1000217208.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217209.jpg",
         "path":  "fotos/1000217209.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217210.jpg",
         "path":  "fotos/1000217210.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217211.jpg",
         "path":  "fotos/1000217211.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217212.jpg",
         "path":  "fotos/1000217212.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217213.jpg",
         "path":  "fotos/1000217213.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217214.jpg",
         "path":  "fotos/1000217214.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217221.jpg",
         "path":  "fotos/1000217221.jpg",
-        "candidate_match":  "Body listrado rosa e branco Carter\u0027s — comparar com o catálogo"
+        "candidate_match":  "Body listrado rosa e branco Carter\u0027s — comparar com o catálogo",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217222.jpg",
         "path":  "fotos/1000217222.jpg",
-        "candidate_match":  ""
+        "candidate_match":  "",
+        "candidate_id":  ""
     },
     {
         "photo":  "1000217223.jpg",
         "path":  "fotos/1000217223.jpg",
-        "candidate_match":  "Blusa branca sem mangas e short mostarda — possível conjunto Kyly"
+        "candidate_match":  "Blusa branca sem mangas e short mostarda — possível conjunto Kyly",
+        "candidate_id":  "conjunto-kyly-mostarda"
     },
     {
         "photo":  "1000217224.jpg",
         "path":  "fotos/1000217224.jpg",
-        "candidate_match":  "Short jeans azul-claro com flores rosa bordadas — possível short jeans Tia Muri"
+        "candidate_match":  "Short jeans azul-claro com flores rosa bordadas — possível short jeans Tia Muri",
+        "candidate_id":  "short-jeans-tia-muri"
     },
     {
         "photo":  "1000217225.jpg",
         "path":  "fotos/1000217225.jpg",
-        "candidate_match":  "Body listrado azul e branco Carter\u0027s — comparar com o catálogo"
+        "candidate_match":  "Body listrado azul e branco Carter\u0027s — comparar com o catálogo",
+        "candidate_id":  ""
     }
 ]
