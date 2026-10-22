@@ -42,12 +42,32 @@ dialog{border:0;border-radius:20px;padding:0;width:min(520px,calc(100% - 28px));
 (function(){
 var KEY='guardaRoupaLiv.v1';
 var starter=[
-{id:'body-carters-rosa',name:'Body rosa com babado e borboleta',category:'Body',size:'18 meses',brand:"Carter's",fit:'unknown',notes:'Manga curta. Classificação confirmada no catálogo.',photo:''},
-{id:'body-carters-verde',name:'Body verde com bolinhas',category:'Body',size:'18 meses',brand:"Carter's",fit:'unknown',notes:'Manga curta. Classificação confirmada no catálogo.',photo:''},
-{id:'body-menta-bebe-papai',name:'Body verde-menta Bebê do Papai',category:'Body',size:'9–12 meses',brand:'Bebê do Papai',fit:'yes',notes:'Sem manga. Faz parte de um conjunto e foi registrado como servindo.',photo:''}
+{"id": "body-carters-rosa", "name": "Body rosa com babado e borboleta", "category": "Body", "size": "18 meses", "brand": "Carter's", "fit": "unknown", "notes": "Manga curta. Classificação confirmada no catálogo.", "photo": ""},
+{"id": "body-carters-verde", "name": "Body verde com bolinhas", "category": "Body", "size": "18 meses", "brand": "Carter's", "fit": "unknown", "notes": "Manga curta. Classificação confirmada no catálogo.", "photo": ""},
+{"id": "body-menta-bebe-papai", "name": "Body verde-menta Bebê do Papai", "category": "Body", "size": "9–12 meses", "brand": "Bebê do Papai", "fit": "yes", "notes": "Sem manga. Faz parte de um conjunto e foi registrado como servindo.", "photo": ""},
+{"id": "short-preto-fadinhas", "name": "Short preto estampado com fadinhas", "category": "Short", "size": "", "brand": "", "fit": "unknown", "notes": "Peça catalogada anteriormente. Tamanho e marca pendentes.", "photo": ""},
+{"id": "pijama-lilas-branco", "name": "Conjunto de pijama lilás e branco", "category": "Pijama", "size": "", "brand": "", "fit": "unknown", "notes": "Blusa de manga longa e calça. Tamanho e marca pendentes.", "photo": ""},
+{"id": "body-branco-floral-azul", "name": "Body branco floral azul", "category": "Body", "size": "12 meses", "brand": "", "fit": "unknown", "notes": "Manga longa. Tamanho registrado anteriormente; marca pendente.", "photo": ""},
+{"id": "blusa-preta-lindika", "name": "Blusa preta de manga longa", "category": "Blusa", "size": "", "brand": "Lindika", "fit": "unknown", "notes": "Tamanho pendente.", "photo": ""},
+{"id": "vestido-branco-sereias", "name": "Vestido branco com estampa de sereias", "category": "Vestido", "size": "", "brand": "", "fit": "unknown", "notes": "Manga curta. Tamanho e marca pendentes.", "photo": ""},
+{"id": "body-rosa-love-to-smile", "name": "Body rosa “Love to Smile”", "category": "Body", "size": "", "brand": "", "fit": "unknown", "notes": "Tamanho e marca pendentes.", "photo": ""},
+{"id": "jardineira-jeans-azul", "name": "Jardineira jeans azul", "category": "Jardineira", "size": "", "brand": "", "fit": "unknown", "notes": "Tamanho e marca pendentes.", "photo": ""},
+{"id": "conjunto-kyly-mostarda", "name": "Conjunto Kyly com blusa e short mostarda", "category": "Conjunto", "size": "2", "brand": "Kyly", "fit": "unknown", "notes": "Aguardando experimentar para confirmar se serve.", "photo": ""},
+{"id": "short-jeans-tia-muri", "name": "Short jeans", "category": "Short", "size": "1", "brand": "Tia Muri", "fit": "yes", "notes": "Registrado como servindo.", "photo": ""},
+{"id": "short-vermelho-somine", "name": "Short vermelho franzidinho", "category": "Short", "size": "4", "brand": "Somine", "fit": "no", "notes": "Registrado como grande.", "photo": ""},
+{"id": "body-branco-flores-lilas-verdes", "name": "Body branco com florzinhas lilás e verdes", "category": "Body", "size": "", "brand": "", "fit": "unknown", "notes": "Manga curta bufante. Tamanho e marca pendentes.", "photo": ""},
+{"id": "body-floral-rosa-verde", "name": "Body floral rosa e verde", "category": "Body", "size": "", "brand": "", "fit": "unknown", "notes": "Manga curta. Tamanho e marca pendentes.", "photo": ""},
+{"id": "body-branco-coracoes-marrons", "name": "Body branco com corações marrons", "category": "Body", "size": "", "brand": "", "fit": "unknown", "notes": "Manga curta. Tamanho e marca pendentes.", "photo": ""},
+{"id": "conjunto-termico", "name": "Conjunto térmico", "category": "Conjunto", "size": "", "brand": "", "fit": "unknown", "notes": "Blusa de manga longa e calça cinza. Tamanho e marca pendentes.", "photo": ""},
+{"id": "calca-moletom-rosa-pink", "name": "Calça de moletom rosa pink", "category": "Calça", "size": "", "brand": "", "fit": "unknown", "notes": "Cordão branco. Tamanho e marca pendentes.", "photo": ""},
+{"id": "casaco-aveludado-rosa-coelho", "name": "Casaco aveludado rosa antigo", "category": "Casaco", "size": "", "brand": "", "fit": "unknown", "notes": "Com capuz e detalhe de coelhinho. Tamanho e marca pendentes.", "photo": ""},
+{"id": "calca-moletom-verde-petroleo", "name": "Calça de moletom verde-petróleo", "category": "Calça", "size": "", "brand": "", "fit": "unknown", "notes": "Tamanho e marca pendentes.", "photo": ""},
+{"id": "blusa-moletom-capivara", "name": "Blusa de moletom azul-clara com capivara", "category": "Blusa", "size": "", "brand": "", "fit": "unknown", "notes": "Manga longa. Tamanho e marca pendentes.", "photo": ""},
+{"id": "poncho-croche-rosa-mesclado", "name": "Poncho de crochê rosa e mesclado", "category": "Poncho", "size": "", "brand": "", "fit": "unknown", "notes": "Com pompons. Tamanho e marca pendentes.", "photo": ""},
+{"id": "vestido-vermelho-abelhinhas-kyly", "name": "Vestido vermelho de abelhinhas", "category": "Vestido", "size": "", "brand": "Kyly", "fit": "unknown", "notes": "Tamanho pendente.", "photo": ""}
 ];
 function $(id){return document.getElementById(id)}
-var items;try{var saved=localStorage.getItem(KEY);items=saved?JSON.parse(saved):starter;if(!Array.isArray(items))items=starter}catch(e){items=starter}
+var items;try{var saved=localStorage.getItem(KEY);if(saved){items=JSON.parse(saved);if(!Array.isArray(items))items=starter;else{var known={};items.forEach(function(i){known[i.id]=true});starter.forEach(function(i){if(!known[i.id])items.push(i)});}}else items=starter}catch(e){items=starter}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){alert('O navegador ficou sem espaço para salvar. Tente uma foto menor.')}}
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function fitLabel(v){return v==='yes'?'Ainda serve':v==='no'?'Não serve mais':'A conferir'}
