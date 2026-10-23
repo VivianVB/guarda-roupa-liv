@@ -19,6 +19,7 @@ index.html            catálogo
 revisao.html          revisão das fotos
 conferir-pecas.html   conferência por texto
 fotos/                80 fotos originais (nomes preservados)
+fotos/mini/           miniaturas leves (480 px) usadas na revisão
 fotos/inventario.json lista das fotos + sugestões provisórias de correspondência
 PROJETO.md            contexto, regras, catálogo e próximos passos
 ```

@@ -66,7 +66,21 @@ As sugestões de correspondência entre fotos e peças (hipóteses, **não decis
 
 ## Próximos passos
 
-1. Abrir `revisao.html` no site publicado e confirmar que as 80 fotos carregam.
-2. Revisar as fotos, marcar decisões e exportar o JSON.
-3. Com o JSON, atualizar o catálogo: associar fotos às peças confirmadas e cadastrar as peças novas.
-4. Avaliar uma forma de guardar os dados fora do navegador (hoje tudo fica em `localStorage`).
+1. Revisar as fotos em `revisao.html` e exportar o JSON de decisões.
+2. Com o JSON, atualizar `dados/catalogo.json`: associar fotos às peças confirmadas e cadastrar as peças novas.
+
+## Etapas do projeto
+
+Objetivo principal: catalogar o guarda-roupa da Liv, podendo adicionar peças e dar baixa nelas. As etapas seguintes dependem de um catálogo confiável.
+
+| Etapa | O que entrega | Situação |
+| --- | --- | --- |
+| 1. Catálogo | Revisão das fotos, fotos ligadas às peças, cadastro e **baixa** de peças (doada, vendida, passada adiante, perdida) sem apagar o histórico. Lista de peças num arquivo único (`dados/catalogo.json`). | Em andamento |
+| 2. Dados na nuvem com login | Peças e fotos num banco com autenticação (ex.: Supabase), sincronizando celular e computador. Torna o site privado de verdade; depois disso o repositório pode ficar privado. | Planejada |
+| 3. Looks com IA | Peças marcadas com cor, estação e ocasião; a IA sugere combinações a partir das fotos. | Planejada |
+| 4. Lista de compras inteligente | Cruzar tamanho atual, crescimento da Liv, estação e lacunas por categoria para sugerir o que comprar. | Planejada |
+| 5. App | Primeiro um app instalável pelo navegador (PWA); depois, se fizer sentido, app nativo. | Planejada |
+
+### Decisão sobre privacidade (22/10/2026)
+
+O repositório continua **público** por enquanto. No plano gratuito do GitHub, repositório privado não publica no GitHub Pages, e mesmo no plano pago o site do Pages fica aberto a quem tiver o link. A privacidade real vem com a Etapa 2 (login).

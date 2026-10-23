@@ -19,6 +19,9 @@ h1{font:500 clamp(1.7rem,5vw,2.5rem) Georgia,serif;margin:6px 0}.eyebrow{font-si
 .hint{font-size:.82rem;color:var(--muted);line-height:1.4;margin:0}
 .use{font:inherit;font-size:.84rem;font-weight:650;border:1px dashed var(--rose);background:#fbf1ef;color:#86504d;border-radius:10px;padding:9px;cursor:pointer;text-align:left}
 select{font:inherit;font-size:.92rem;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff;color:var(--ink)}
+.extra{display:grid;gap:8px;background:#fbf6f2;border-radius:10px;padding:9px}.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{display:grid;gap:4px;font-size:.78rem;font-weight:650;color:var(--muted)}.mini input,details textarea{font:inherit;font-size:.9rem;font-weight:400;width:100%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:8px;background:#fff;color:var(--ink)}
+details summary{font-size:.8rem;color:var(--muted);cursor:pointer}details textarea{margin-top:6px;resize:vertical}
 .empty{grid-column:1/-1;text-align:center;border:1px dashed #d7c4b8;border-radius:16px;padding:30px;color:var(--muted)}
 .foot{display:flex;gap:9px;flex-wrap:wrap;margin-top:24px;align-items:center}.foot button{font:inherit;font-weight:650;border-radius:11px;padding:10px 13px;cursor:pointer;border:1px solid var(--line);background:var(--pale);color:var(--ink)}.foot .primary{background:var(--rose);border-color:var(--rose);color:#fff}
 .note{font-size:.82rem;color:var(--muted);line-height:1.5}a{color:#86504d}
@@ -29,6 +32,7 @@ select{font:inherit;font-size:.92rem;width:100%;border:1px solid var(--line);bor
 <main>
 <nav class="chips" id="chips"></nav>
 <section id="grid" class="grid"><div class="empty">Carregando as fotos…</div></section>
+<datalist id="cats"><option>Acessório</option><option>Blusa</option><option>Body</option><option>Calça</option><option>Calçado</option><option>Casaco</option><option>Conjunto</option><option>Jardineira</option><option>Macacão</option><option>Meias</option><option>Pijama</option><option>Poncho</option><option>Saia</option><option>Short</option><option>Vestido</option></datalist><datalist id="fotosList"></datalist>
 <div class="foot"><button class="primary" id="export">Exportar decisões (JSON)</button><button id="exportCsv">Exportar planilha (CSV)</button><a href="./">← Voltar ao catálogo</a></div>
 <p class="note">As escolhas ficam salvas neste navegador. Quando terminar, exporte o JSON para atualizarmos o catálogo.</p>
 </main>
@@ -73,12 +77,18 @@ cats.map(cat=>'<optgroup label="'+esc(cat)+'">'+catalog.filter(c=>c.cat===cat).s
 function value(p){const d=decisions[p.photo]||{};if(d.status==='ja-cadastrada'&&byId[d.match])return d.match;return others.some(o=>o[0]===d.status)?d.status:''}
 function kind(v){return !v?'pendentes':byId[v]?'vinculadas':v==='nova'?'novas':v}
 function tag(v){if(!v)return '<span class="tag">A conferir</span>';if(byId[v])return '<span class="tag linked">Vinculada</span>';return '<span class="tag new">'+esc(others.find(o=>o[0]===v)[1].split(' (')[0])+'</span>'}
-function setValue(photo,v){const d=Object.assign({},decisions[photo]);if(!v){d.status='a-conferir';d.match=''}else if(byId[v]){d.status='ja-cadastrada';d.match=v}else{d.status=v;d.match=''}decisions[photo]=d;try{localStorage.setItem(key,JSON.stringify(decisions))}catch(e){alert('Não foi possível salvar neste navegador. Exporte as decisões para não perdê-las.')}}
-function card(p){const v=value(p),cand=byId[p.candidate_id];
-return '<article class="card'+(v?' done':'')+'" data-photo="'+esc(p.photo)+'"><a class="photo" href="'+esc(p.path)+'" target="_blank" rel="noopener" title="Abrir foto em tamanho real"><img loading="lazy" src="'+esc(p.path)+'" alt="Foto '+esc(p.photo)+'"></a><div class="body"><div class="top">'+tag(v)+'<span class="file">'+esc(p.photo)+'</span></div>'+
+function setValue(photo,v){const d=Object.assign({},decisions[photo]);if(!v){d.status='a-conferir';d.match=''}else if(byId[v]){d.status='ja-cadastrada';d.match=v}else{d.status=v;d.match=''}decisions[photo]=d;save()}
+function save(){try{localStorage.setItem(key,JSON.stringify(decisions))}catch(e){alert('Não foi possível salvar neste navegador. Exporte as decisões para não perdê-las.')}}
+function card(p){const v=value(p),cand=byId[p.candidate_id],d=decisions[p.photo]||{};
+return '<article class="card'+(v?' done':'')+'" data-photo="'+esc(p.photo)+'"><a class="photo" href="'+esc(p.path)+'" target="_blank" rel="noopener" title="Abrir foto em tamanho real"><img loading="lazy" src="fotos/mini/'+esc(p.photo)+'" alt="Foto '+esc(p.photo)+'"></a><div class="body"><div class="top">'+tag(v)+'<span class="file">'+esc(p.photo)+'</span></div>'+
 (p.candidate_match?'<p class="hint">Sugestão: '+esc(p.candidate_match)+'</p>':'')+
 (cand&&v!==cand.id?'<button class="use" data-use="'+esc(p.photo)+'" data-id="'+cand.id+'">✓ É esta: '+esc(pieceLabel(cand))+'</button>':'')+
-'<select data-photo="'+esc(p.photo)+'" aria-label="Peça do catálogo para '+esc(p.photo)+'"><option value="">Escolher peça…</option>'+optionsHtml+'</select></div></article>'}
+'<select data-photo="'+esc(p.photo)+'" aria-label="Peça do catálogo para '+esc(p.photo)+'"><option value="">Escolher peça…</option>'+optionsHtml+'</select>'+extra(p,v)+
+'<details'+(d.notes?' open':'')+'><summary>Observação</summary><textarea rows="2" data-field="notes" data-for="'+esc(p.photo)+'" placeholder="Ex.: tamanho na etiqueta, mancha, ganhou de…">'+esc(d.notes)+'</textarea></details></div></article>'}
+// Extra fields shown only for "peça nova" and "foto repetida"
+function extra(p,v){const d=decisions[p.photo]||{},f=(k,label,attrs)=>'<label class="mini">'+label+'<input data-field="'+k+'" data-for="'+esc(p.photo)+'" value="'+esc(d[k])+'" '+(attrs||'')+'></label>';
+if(v==='nova')return '<div class="extra">'+f('nome','Nome da peça','placeholder="Ex.: Calça floral branca"')+'<div class="two">'+f('categoria','Categoria','list="cats" placeholder="Ex.: Calça"')+f('tamanho','Tamanho','placeholder="Ex.: 2"')+'</div></div>';
+if(v==='repetida')return '<div class="extra">'+f('igual_a','Mesma peça da foto','list="fotosList" placeholder="Ex.: 1000217089.jpg"')+'</div>';return ''}
 function counts(){const c={todas:photos.length,pendentes:0,vinculadas:0,novas:0,repetida:0,duvida:0};photos.forEach(p=>c[kind(value(p))]++);return c}
 function renderChips(){const c=counts(),done=photos.length-c.pendentes;
 $('bar').style.width=(photos.length?done/photos.length*100:0)+'%';$('progressLabel').textContent=done+' de '+photos.length+' fotos resolvidas';
@@ -90,11 +100,12 @@ function refreshCard(photo){const p=photos.find(x=>x.photo===photo),el=$('grid')
 // Rebuild the card text but keep the already-loaded <img> to avoid flicker
 const tmp=document.createElement('div');tmp.innerHTML=card(p);const fresh=tmp.firstElementChild;fresh.replaceChild(el.querySelector('.photo'),fresh.querySelector('.photo'));el.replaceWith(fresh);fresh.querySelector('select').value=value(p);renderChips()}
 $('grid').addEventListener('change',e=>{if(e.target.matches('select[data-photo]')){setValue(e.target.dataset.photo,e.target.value);refreshCard(e.target.dataset.photo)}});
+$('grid').addEventListener('input',e=>{const el=e.target;if(el.dataset.field){decisions[el.dataset.for]=Object.assign({},decisions[el.dataset.for],{[el.dataset.field]:el.value});save()}});
 $('grid').addEventListener('click',e=>{const b=e.target.closest('[data-use]');if(b){setValue(b.dataset.use,b.dataset.id);refreshCard(b.dataset.use)}});
 $('chips').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(b){filter=b.dataset.filter;render()}});
-fetch('fotos/inventario.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(list=>{photos=list;render()}).catch(err=>{$('progressLabel').textContent='Não foi possível carregar a lista de fotos ('+err.message+'). Recarregue a página.';$('grid').innerHTML='<div class="empty">As fotos não puderam ser carregadas.</div>'});
+fetch('fotos/inventario.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.json()}).then(list=>{photos=list;$('fotosList').innerHTML=list.map(p=>'<option value="'+esc(p.photo)+'">').join('');render()}).catch(err=>{$('progressLabel').textContent='Não foi possível carregar a lista de fotos ('+err.message+'). Recarregue a página.';$('grid').innerHTML='<div class="empty">As fotos não puderam ser carregadas.</div>'});
 function download(name,content,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function rows(){return photos.map(p=>{const v=value(p),d=decisions[p.photo]||{};return{foto:p.photo,decisao:!v?'A conferir':byId[v]?'Já cadastrada':others.find(o=>o[0]===v)[1],peca_id:byId[v]?v:'',peca:byId[v]?pieceLabel(byId[v]):'',sugestao:p.candidate_match||'',observacoes:d.notes||''}})}
+function rows(){return photos.map(p=>{const v=value(p),d=decisions[p.photo]||{};return{foto:p.photo,decisao:!v?'A conferir':byId[v]?'Já cadastrada':others.find(o=>o[0]===v)[1],peca_id:byId[v]?v:'',peca:byId[v]?pieceLabel(byId[v]):'',nova_nome:v==='nova'?d.nome||'':'',nova_categoria:v==='nova'?d.categoria||'':'',nova_tamanho:v==='nova'?d.tamanho||'':'',igual_a:v==='repetida'?d.igual_a||'':'',sugestao:p.candidate_match||'',observacoes:d.notes||''}})}
 $('export').addEventListener('click',()=>download('decisoes-guarda-roupa-liv.json',JSON.stringify({exportado_em:new Date().toISOString(),decisoes:decisions,resumo:rows()},null,2),'application/json;charset=utf-8'));
 $('exportCsv').addEventListener('click',()=>{const r=rows(),cols=Object.keys(r[0]||{foto:''});download('decisoes-guarda-roupa-liv.csv','﻿'+[cols,...r.map(x=>cols.map(c=>x[c]))].map(l=>l.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8')});
 })();
