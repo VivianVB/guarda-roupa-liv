@@ -84,7 +84,7 @@ return '<article class="card'+(v?' done':'')+'" data-photo="'+esc(p.photo)+'"><a
 '<select data-photo="'+esc(p.photo)+'" aria-label="Peça do catálogo para '+esc(p.photo)+'"><option value="">Escolher peça…</option>'+optionsHtml+'</select>'+extra(p,v)+
 '<details'+(d.notes?' open':'')+'><summary>Observação</summary><textarea rows="2" data-field="notes" data-for="'+esc(p.photo)+'" placeholder="Ex.: tamanho na etiqueta, mancha, ganhou de…">'+esc(d.notes)+'</textarea></details></div></article>'}
 // Extra fields: details for linked/new pieces, source photo for repeated ones
-const cats=['Acessório','Blusa','Body','Calça','Calçado','Casaco','Chapéu','Conjunto','Jardineira','Macacão','Meias','Moletom','Pijama','Poncho','Saia','Short','Vestido'];
+const cats=['Acessório','Blusa','Body','Calça','Calçado','Casaco','Chapéu','Conjunto','Jardineira','Macacão','Meias','Pijama','Poncho','Saia','Short','Vestido'];
 const fits=[['','A conferir'],['sim','Sim, serve'],['grande','Ainda grande'],['pequena','Já ficou pequena']];
 function extra(p,v){const d=decisions[p.photo]||{},attrs=k=>'data-field="'+k+'" data-for="'+esc(p.photo)+'"',
 f=(k,label,ph)=>'<label class="mini">'+label+'<input '+attrs(k)+' value="'+esc(d[k])+'" placeholder="'+esc(ph)+'"></label>',
@@ -100,10 +100,10 @@ $('bar').style.width=(photos.length?done/photos.length*100:0)+'%';$('progressLab
 $('chips').innerHTML=[['todas','Todas'],['pendentes','A conferir'],['vinculadas','Vinculadas'],['novas','Peças novas'],['repetida','Repetidas'],['duvida','Dúvidas']].map(f=>'<button class="chip" data-filter="'+f[0]+'" aria-pressed="'+(filter===f[0])+'">'+f[1]+' ('+c[f[0]]+')</button>').join('')}
 function render(){const list=photos.filter(p=>filter==='todas'||kind(value(p))===filter);
 $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">Nenhuma foto neste filtro.</div>';
-$('grid').querySelectorAll('select').forEach(s=>{const p=photos.find(x=>x.photo===s.dataset.photo);s.value=value(p)});renderChips()}
+$('grid').querySelectorAll('select[data-photo]').forEach(s=>{const p=photos.find(x=>x.photo===s.dataset.photo);s.value=value(p)});renderChips()}
 function refreshCard(photo){const p=photos.find(x=>x.photo===photo),el=$('grid').querySelector('.card[data-photo="'+CSS.escape(photo)+'"]');if(!el)return;
 // Rebuild the card text but keep the already-loaded <img> to avoid flicker
-const tmp=document.createElement('div');tmp.innerHTML=card(p);const fresh=tmp.firstElementChild;fresh.replaceChild(el.querySelector('.photo'),fresh.querySelector('.photo'));el.replaceWith(fresh);fresh.querySelector('select').value=value(p);renderChips()}
+const tmp=document.createElement('div');tmp.innerHTML=card(p);const fresh=tmp.firstElementChild;fresh.replaceChild(el.querySelector('.photo'),fresh.querySelector('.photo'));el.replaceWith(fresh);fresh.querySelector('select[data-photo]').value=value(p);renderChips()}
 $('grid').addEventListener('change',e=>{if(e.target.matches('select[data-photo]')){setValue(e.target.dataset.photo,e.target.value);refreshCard(e.target.dataset.photo)}});
 $('grid').addEventListener('input',e=>{const el=e.target;if(el.dataset.field){decisions[el.dataset.for]=Object.assign({},decisions[el.dataset.for],{[el.dataset.field]:el.value});save()}});
 $('grid').addEventListener('click',e=>{const b=e.target.closest('[data-use]');if(b){setValue(b.dataset.use,b.dataset.id);refreshCard(b.dataset.use)}});
