@@ -84,11 +84,12 @@ return '<article class="card'+(v?' done':'')+'" data-photo="'+esc(p.photo)+'"><a
 '<select data-photo="'+esc(p.photo)+'" aria-label="Peça do catálogo para '+esc(p.photo)+'"><option value="">Escolher peça…</option>'+optionsHtml+'</select>'+extra(p,v)+
 '<details'+(d.notes?' open':'')+'><summary>Observação</summary><textarea rows="2" data-field="notes" data-for="'+esc(p.photo)+'" placeholder="Ex.: tamanho na etiqueta, mancha, ganhou de…">'+esc(d.notes)+'</textarea></details></div></article>'}
 // Extra fields: details for linked/new pieces, source photo for repeated ones
-const cats=['Acessório','Blusa','Body','Calça','Calçado','Casaco','Conjunto','Jardineira','Macacão','Meias','Pijama','Poncho','Saia','Short','Vestido'];
+const cats=['Acessório','Blusa','Body','Calça','Calçado','Casaco','Chapéu','Conjunto','Jardineira','Macacão','Meias','Moletom','Pijama','Poncho','Saia','Short','Vestido'];
 const fits=[['','A conferir'],['sim','Sim, serve'],['grande','Ainda grande'],['pequena','Já ficou pequena']];
 function extra(p,v){const d=decisions[p.photo]||{},attrs=k=>'data-field="'+k+'" data-for="'+esc(p.photo)+'"',
 f=(k,label,ph)=>'<label class="mini">'+label+'<input '+attrs(k)+' value="'+esc(d[k])+'" placeholder="'+esc(ph)+'"></label>',
-sel=(k,label,opts)=>'<label class="mini">'+label+'<select '+attrs(k)+'>'+opts.map(o=>'<option value="'+esc(o[0])+'"'+((d[k]||'')===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join('')+'</select></label>';
+sel=(k,label,opts)=>{const cur=(d[k]||'').trim();if(cur&&!opts.some(o=>o[0]===cur))opts=opts.concat([[cur,cur]]);// keep values typed before the list existed
+return '<label class="mini">'+label+'<select '+attrs(k)+'>'+opts.map(o=>'<option value="'+esc(o[0])+'"'+(cur===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join('')+'</select></label>'};
 if(byId[v]||v==='nova'){const c=byId[v]||{};
 return '<div class="extra">'+(v==='nova'?f('nome','Nome da peça','Ex.: Calça floral branca')+sel('categoria','Categoria',[['','Escolher…']].concat(cats.map(x=>[x,x]))):'')+
 '<div class="two">'+f('tamanho','Tamanho',c.size||'Ex.: 2')+f('marca','Marca',c.brand||'Ex.: Kyly')+'</div>'+sel('serve','Serve na Liv?',fits)+'</div>'}
