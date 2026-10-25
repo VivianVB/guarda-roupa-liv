@@ -86,6 +86,8 @@ return '<article class="card'+(v?' done':'')+'" data-photo="'+esc(p.photo)+'"><a
 '<details'+(d.notes?' open':'')+'><summary>Observação</summary><textarea rows="2" data-field="notes" data-for="'+esc(p.photo)+'" placeholder="Ex.: tamanho na etiqueta, mancha, ganhou de…">'+esc(d.notes)+'</textarea></details></div></article>'}
 // Extra fields: details for linked/new pieces, source photo for repeated ones
 const cats=['Acessório','Blusa','Body','Calça','Calçado','Casaco','Chapéu','Conjunto','Jardineira','Macacão','Meias','Pijama','Poncho','Saia','Short','Vestido'];
+const sleeves=[['','—'],['sem','Sem manga'],['curta','Manga curta'],['longa','Manga longa'],['na','Não se aplica']];
+const seasons=[['','—'],['calor','Calor'],['meia','Meia estação'],['frio','Frio']];
 const fits=[['','A conferir'],['sim','Sim, serve'],['grande','Ainda grande'],['pequena','Já ficou pequena']];
 function extra(p,v){const d=decisions[p.photo]||{},attrs=k=>'data-field="'+k+'" data-for="'+esc(p.photo)+'"',
 f=(k,label,ph)=>'<label class="mini">'+label+'<input '+attrs(k)+' value="'+esc(d[k])+'" placeholder="'+esc(ph)+'"></label>',
@@ -93,7 +95,8 @@ sel=(k,label,opts)=>{const cur=(d[k]||'').trim();if(cur&&!opts.some(o=>o[0]===cu
 return '<label class="mini">'+label+'<select '+attrs(k)+'>'+opts.map(o=>'<option value="'+esc(o[0])+'"'+(cur===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join('')+'</select></label>'};
 if(byId[v]||v==='nova'){const c=byId[v]||{};
 return '<div class="extra">'+(v==='nova'?f('nome','Nome da peça','Ex.: Calça floral branca')+sel('categoria','Categoria',[['','Escolher…']].concat(cats.map(x=>[x,x]))):'')+
-'<div class="two">'+f('tamanho','Tamanho',c.size||'Ex.: 2')+f('marca','Marca',c.brand||'Ex.: Kyly')+'</div>'+sel('serve','Serve na Liv?',fits)+'</div>'}
+'<div class="two">'+f('tamanho','Tamanho',c.size||'Ex.: 2')+f('marca','Marca',c.brand||'Ex.: Kyly')+'</div>'+
+'<div class="two">'+sel('manga','Manga',sleeves)+sel('estacao','Estação',seasons)+'</div>'+sel('serve','Serve na Liv?',fits)+'</div>'}
 if(v==='repetida')return '<div class="extra">'+sel('igual_a','Mesma peça da foto',[['','Escolher foto…']].concat(photos.filter(x=>x.photo!==p.photo).map(x=>[x.photo,x.photo])))+'</div>';return ''}
 function counts(){const c={todas:photos.length,pendentes:0,vinculadas:0,novas:0,repetida:0,duvida:0};photos.forEach(p=>c[kind(value(p))]++);c.conferidas=c.todas-c.pendentes;return c}
 // "Conferidas" groups every resolved photo; the other filters match one decision kind
@@ -116,7 +119,7 @@ fetch('fotos/inventario.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error(
 return fetch('dados/decisoes.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).catch(()=>null).then(pub=>{
 Object.entries((pub&&pub.decisoes)||{}).forEach(([k,d])=>{const cur=decisions[k];if(!(cur&&cur.status&&cur.status!=='a-conferir'))decisions[k]=d});save();render()})}).catch(err=>{$('progressLabel').textContent='Não foi possível carregar a lista de fotos ('+err.message+'). Recarregue a página.';$('grid').innerHTML='<div class="empty">As fotos não puderam ser carregadas.</div>'});
 function download(name,content,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function rows(){return photos.map(p=>{const v=value(p),d=decisions[p.photo]||{};return{foto:p.photo,decisao:!v?'A conferir':byId[v]?'Já cadastrada':others.find(o=>o[0]===v)[1],peca_id:byId[v]?v:'',peca:byId[v]?pieceLabel(byId[v]):'',nova_nome:v==='nova'?d.nome||'':'',nova_categoria:v==='nova'?d.categoria||'':'',tamanho:d.tamanho||'',marca:d.marca||'',serve:(fits.find(x=>x[0]===(d.serve||''))||fits[0])[1],igual_a:v==='repetida'?d.igual_a||'':'',sugestao:p.candidate_match||'',observacoes:d.notes||''}})}
+function rows(){return photos.map(p=>{const v=value(p),d=decisions[p.photo]||{};return{foto:p.photo,decisao:!v?'A conferir':byId[v]?'Já cadastrada':others.find(o=>o[0]===v)[1],peca_id:byId[v]?v:'',peca:byId[v]?pieceLabel(byId[v]):'',nova_nome:v==='nova'?d.nome||'':'',nova_categoria:v==='nova'?d.categoria||'':'',tamanho:d.tamanho||'',marca:d.marca||'',manga:d.manga?(sleeves.find(x=>x[0]===d.manga)||[,d.manga])[1]:'',estacao:d.estacao?(seasons.find(x=>x[0]===d.estacao)||[,d.estacao])[1]:'',serve:(fits.find(x=>x[0]===(d.serve||''))||fits[0])[1],igual_a:v==='repetida'?d.igual_a||'':'',sugestao:p.candidate_match||'',observacoes:d.notes||''}})}
 $('export').addEventListener('click',()=>download('decisoes-guarda-roupa-liv.json',JSON.stringify({exportado_em:new Date().toISOString(),decisoes:decisions,resumo:rows()},null,2),'application/json;charset=utf-8'));
 // Import an exported JSON (from this page) so the review can continue on another device
 document.querySelectorAll('.importBtn').forEach(b=>b.addEventListener('click',()=>$('importFile').click()));
