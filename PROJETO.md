@@ -39,6 +39,7 @@ Manter um catálogo digital das roupas da Liv, com fotos, descrições, tamanhos
 - `1000217092.jpg` (calça térmica cinza) faz parte do `conjunto-termico` — vincular a ele, não cadastrar como peça nova (24/10/2026).
 - `1000217099.jpg` (moletom coelhinho) é outra peça, diferente de `casaco-aveludado-rosa-coelho` — cadastrar como nova, categoria Casaco (24/10/2026).
 - Categoria "Moletom" não é usada; moletons entram como Casaco.
+- Fotos marcadas como "Foto repetida" são **descartadas** no catálogo: cada peça fica com uma foto só, a que foi marcada como nova ou vinculada. Os arquivos continuam em `fotos/` (24/10/2026).
 
 ## Catálogo inicial — 23 peças
 
