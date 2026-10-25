@@ -22,9 +22,15 @@ Contexto completo do projeto, catálogo e etapas: `PROJETO.md`.
 - Preservar os nomes originais das fotos em `fotos/`; miniaturas ficam em `fotos/mini/`.
 - Fotos marcadas como "Foto repetida" são descartadas no catálogo (a peça fica com uma foto só).
 - Categoria "Moletom" não existe: moletons entram como **Casaco**.
-- Manga (sem, curta, longa) e Estação (calor, meia estação, frio) são **campos** da peça, não categorias.
+- A **manga entra na categoria** de blusas, bodies e vestidos: "Body manga curta", "Body manga longa", "Body sem manga", e o mesmo para Blusa e Vestido. Peças cuja manga não está confirmada ficam só com "Body", "Blusa" ou "Vestido" até a usuária dizer.
+- **Estação** (calor, meia estação, frio) é um campo da peça, não categoria.
 
-## Dados da revisão de fotos
+## Revisão de fotos (página privada no claude.ai)
 
-- As respostas da usuária ficam no navegador dela; só chegam ao Claude por exportação JSON.
-- `dados/decisoes.json` guarda as decisões já recebidas e é carregado pela página em qualquer aparelho. Ao receber uma exportação nova, mesclar nele (aplicando as correções combinadas em conversa) e publicar.
+- Página: https://claude.ai/artifact/Fh6duJeKMsEYtEmQbdmdLg (fonte em `artifact/revisao-fotos.html`; republicar sempre pelo mesmo caminho).
+- Cada escolha da usuária é salva sozinha no banco da página. Ler com a ferramenta `ArtifactData` nesse link:
+  - `fotos/<arquivo>`: `url` da miniatura (asset), `candidate_match`, `candidate_id`.
+  - `catalogo/<id>`: `nome`, `categoria`, `tamanho`, `marca`.
+  - `decisoes/<arquivo>`: `status` (`ja-cadastrada`, `nova`, `repetida`, `duvida`, `a-conferir`), `match`, `nome`, `categoria`, `tamanho`, `marca`, `estacao`, `serve`, `igual_a`, `notes`, `rotacao` (graus, sentido horário).
+- Quando a usuária pedir para atualizar, ler `decisoes`, mostrar o resumo e só então aplicar no catálogo.
+- O site antigo no GitHub Pages (`revisao.html` + `dados/decisoes.json`) ficou como histórico; não é mais o lugar de revisar.
