@@ -88,6 +88,7 @@ details summary{font-size:.8rem;color:var(--muted);cursor:pointer}details textar
     <div class="meter" aria-hidden="true"><div id="meter"></div></div>
     <span class="count" id="count">Carregando…</span>
     <span class="save" id="save"><span class="dot"></span><span id="saveText">Conectando…</span></span>
+    <button class="btn" id="refreshList" type="button">↻ Atualizar lista</button>
     <button class="btn" id="saveNow" type="button">Salvar agora</button>
   </div>
   <nav class="chips" id="chips" aria-label="Filtrar fotos"></nav>
@@ -210,6 +211,8 @@ $('grid').addEventListener('click',e=>{const u=e.target.closest('[data-use]'),r=
   if(u){setChoice(u.dataset.use,u.dataset.id);refreshCard(u.dataset.use)}
   if(r){const p=r.dataset.p,d=Object.assign({},decisions[p]);d.rotacao=(((d.rotacao||0)+Number(r.dataset.rot))%360+360)%360;decisions[p]=d;
     const img=r.closest('.photo').querySelector('img');img.setAttribute('style',rotStyle(d.rotacao));queue(p,400)}});
+// Re-applies the current filter, so photos confirmed or excluded in this visit leave the list
+$('refreshList').addEventListener('click',()=>{Object.keys(pending).forEach(p=>{clearTimeout(timers[p]);flush(p)});render();window.scrollTo({top:0})});
 $('chips').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(b){filter=b.dataset.filter;render()}});
 
 // ---------- data ----------
