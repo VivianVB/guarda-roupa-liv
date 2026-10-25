@@ -41,7 +41,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 select,input,textarea{font:inherit;font-size:.92rem;width:100%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;background:var(--surface);color:var(--fg)}
 main{padding-block:14px 48px}
 .count{color:var(--muted);font-size:.85rem;margin:0 0 10px;font-variant-numeric:tabular-nums}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}/* 5 per row on a notebook */
+.photo img{cursor:pointer}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
 .card.open{grid-column:span 2}
 .photo{position:relative;aspect-ratio:1/1;max-width:100%;background:var(--sunk);overflow:hidden;display:grid;place-items:center;color:var(--muted);font-size:.85rem}
@@ -82,9 +83,8 @@ label.f:has(.miss){color:var(--warn)}
 .bulk select,.bulk input[type=text]{width:auto;flex:1 1 130px}
 .bulk .n{font-weight:700}
 body.has-bulk main{padding-bottom:150px}
-/* Conferência: same 4-up grid as the catalog, with a shorter photo and compact fields */
-.compact .card.open{grid-column:auto}
-.compact .photo{aspect-ratio:4/3}
+/* Conferência: same grid as the catalog, compact fields when a card is opened.
+   The photo box stays square so photos rotated by 90° still fit whole. */
 .compact .rot{bottom:4px;right:4px;gap:4px}.compact .rot button{width:28px;height:28px;font-size:.9rem}
 .compact .body{padding:8px;gap:6px}
 .compact .editor{gap:6px;padding:8px}.compact .two{gap:6px}
@@ -92,6 +92,22 @@ body.has-bulk main{padding-bottom:150px}
 .compact label.f{font-size:.66rem;gap:2px}
 .compact .btn{padding:6px 8px;font-size:.78rem}
 @media (max-width:560px){.grid{grid-template-columns:minmax(0,1fr)}.card.open{grid-column:auto}}
+/* Compras, Looks and Perfil views */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;margin-bottom:14px}
+.panel h2{font-family:var(--display);font-size:1.2rem;margin:0}
+.panel .hint{margin:0;color:var(--muted);font-size:.85rem}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left}
+.tbl th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.tbl td.n{text-align:center;width:70px}.tbl input{width:58px;text-align:center;padding:5px}
+.buy{font-weight:700;color:var(--accent)}.okc{color:var(--ok);font-weight:700}
+.scroll{overflow-x:auto}
+.looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.look{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:grid}
+.look .pics{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;background:var(--line)}
+.look .pics div{aspect-ratio:1/1;background:var(--sunk);overflow:hidden}.look .pics img{width:100%;height:100%;object-fit:contain}
+.look .txt{padding:10px;display:grid;gap:6px;font-size:.85rem}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 @media (prefers-reduced-motion:reduce){.photo img{transition:none}}
 </style>
 
@@ -106,6 +122,7 @@ body.has-bulk main{padding-bottom:150px}
     <select id="fEst" aria-label="Estação"><option value="">Todas as estações</option><option value="calor">Calor</option><option value="meia">Meia estação</option><option value="frio">Frio</option></select>
     <select id="fServe" aria-label="Serve"><option value="">Serve: todas</option><option value="sim">Serve</option><option value="grande">Ainda grande</option><option value="pequena">Já ficou pequena</option></select>
     <select id="fFalta" aria-label="O que falta" hidden></select>
+    <button class="btn" id="clearF" type="button" hidden>✕ Limpar filtros</button>
     <button class="btn" id="selAll" type="button" hidden>Selecionar todas deste filtro</button>
     <button class="btn primary" id="add" type="button">＋ Nova peça</button>
     <span class="save" id="save"><span class="dot"></span><span id="saveText">Conectando…</span></span>
@@ -113,7 +130,7 @@ body.has-bulk main{padding-bottom:150px}
   <div class="chiprow" id="grpChips" aria-label="Filtrar por grupo"></div>
   <div class="chiprow sub" id="subChips" aria-label="Refinar categorias" hidden></div>
 </div></div>
-<main class="wrap"><p class="count" id="count"></p><section class="grid" id="grid"><div class="empty">Carregando o guarda-roupa…</div></section></main>
+<main class="wrap"><p class="count" id="count"></p><section class="grid" id="grid"><div class="empty">Carregando o guarda-roupa…</div></section><section id="view" hidden></section></main>
 <div class="bulk" id="bulk" hidden><div class="in">
   <span class="n" id="bulkN"></span>
   <select id="bMarca" aria-label="Marca para aplicar"></select><input type="text" id="bMarcaNova" placeholder="Nova marca" hidden>
@@ -187,7 +204,7 @@ function editor(p){return '<div class="editor">'+field(p,'nome','Nome')+pick(p,'
   (p.aviso?'<button type="button" class="btn" data-clearaviso="'+esc(p.id)+'">Resolvi o aviso</button>':'')+'</div>'+
   (ativa(p)?'<button type="button" class="btn danger" data-excluir="'+esc(p.id)+'">🗑 Excluir</button>'
     :'<div class="row"><button type="button" class="btn" data-restaurar="'+esc(p.id)+'">Restaurar</button><button type="button" class="btn danger" data-apagar="'+esc(p.id)+'">Apagar de vez</button></div>')+'</div>'}
-function card(p){const m=missing(p),isOpen=open.has(p.id)||tab==='conferencia';
+function card(p){const m=missing(p),isOpen=open.has(p.id);
   const chips=[p.categoria,p.tamanho,label(seasons,p.estacao)].filter(Boolean).map(t=>'<span class="chip">'+esc(t)+'</span>').join('')+
     (p.serve?'<span class="chip '+(p.serve==='sim'?'ok':'warn')+'">'+esc(label(fits,p.serve))+'</span>':'')+
     (p.conservacao&&p.conservacao!=='boa'?'<span class="chip '+(p.conservacao==='nova'?'ok':'alert')+'">'+esc(label(conds,p.conservacao))+'</span>':'')+
@@ -200,13 +217,14 @@ function card(p){const m=missing(p),isOpen=open.has(p.id)||tab==='conferencia';
     (p.marca?'<span class="chip" style="justify-self:start">'+esc(p.marca)+'</span>':'')+
     (p.aviso&&ativa(p)?'<p class="aviso">⚠ '+esc(p.aviso)+'</p>':'')+
     (m.length&&ativa(p)?'<p class="faltam">Falta preencher: '+m.map(x=>x[1]).join(', ')+'</p>':'')+
-    (tab!=='conferencia'?'<button type="button" class="btn" data-toggle="'+esc(p.id)+'">'+(isOpen?'Fechar':'Editar')+'</button>':'')+
+    '<button type="button" class="btn" data-toggle="'+esc(p.id)+'">'+(isOpen?'Fechar':'Editar')+'</button>'+
     (isOpen?editor(p):'')+'</div></article>'}
 function markMissing(el){if(!el)return;const p=Object.assign({id:el.dataset.card},pecas[el.dataset.card]);const keys=new Set(missing(p).map(x=>x[0]));
   el.querySelectorAll('[data-k]').forEach(f=>f.classList.toggle('miss',keys.has(f.dataset.k)));
   const t=el.querySelector('.faltam');const m=missing(p);if(t){t.textContent=m.length?'Falta preencher: '+m.map(x=>x[1]).join(', '):'Tudo preenchido ✓'}}
-function renderTabs(){const l=lists();$('tabs').innerHTML=[['catalogo','Catálogo',l.catalogo.length],['conferencia','Conferência',l.conferencia.length],['lixeira','Lixeira',l.lixeira.length]]
-  .map(t=>'<button type="button" role="tab" class="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+' ('+t[2]+')</button>').join('')}
+function renderTabs(){const l=lists();$('tabs').innerHTML=[['catalogo','Catálogo',l.catalogo.length],['conferencia','Conferência',l.conferencia.length],['compras','Compras'],['looks','Looks'],['perfil','Perfil'],['lixeira','Lixeira',l.lixeira.length]]
+  .map(t=>'<button type="button" role="tab" class="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+(t[2]!==undefined?' ('+t[2]+')':'')+'</button>').join('')}
+const VIEWS=['compras','looks','perfil'];
 // Category groups used by the multi-select filter; categories are matched by their first word
 const groups=[['cima','Partes de cima',['Blusa','Body']],['baixo','Partes de baixo',['Calça','Short','Saia']],['unica','Peças únicas',['Vestido','Jardineira','Macacão']],
   ['pijama','Pijamas',['Pijama']],['agasalho','Agasalhos',['Casaco','Colete','Poncho']],['acessorio','Acessórios',['Meias','Chapéu','Calçado','Acessório']]];
@@ -227,12 +245,16 @@ $('subChips').addEventListener('click',e=>{const b=e.target.closest('[data-subca
 function renderFalta(){const conf=tab==='conferencia';$('fFalta').hidden=!conf;if(!conf)return;const cur=$('fFalta').value,n={};
   lists().conferencia.forEach(p=>pendencias(p).forEach(([k,l])=>{n[k]=n[k]||[l,0];n[k][1]++}));
   $('fFalta').innerHTML='<option value="">Falta: tudo</option>'+Object.entries(n).sort((a,b)=>b[1][1]-a[1][1]).map(([k,[l,c]])=>'<option value="'+k+'"'+(k===cur?' selected':'')+'>Falta: '+esc(l)+' ('+c+')</option>').join('')}
-function render(){if(!loaded)return;renderTabs();renderCats();renderFalta();
+function render(){if(!loaded)return;renderTabs();
+  const isView=VIEWS.includes(tab);['tools','grpChips','count','grid'].forEach(i=>$(i).hidden=isView);$('subChips').hidden=true;$('view').hidden=!isView;
+  if(isView){picked.clear();renderBulk();({compras:renderCompras,looks:renderLooks,perfil:renderPerfil})[tab]();return}
+  renderCats();renderFalta();
   const q=$('q').value.trim().toLocaleLowerCase('pt-BR'),fe=$('fEst').value,fs=$('fServe').value,ff=tab==='conferencia'?$('fFalta').value:'';
   $('grid').classList.toggle('compact',tab==='conferencia');
   let list=lists()[tab].filter(p=>(!q||[p.nome,p.marca,p.tamanho,p.categoria,p.notes].join(' ').toLocaleLowerCase('pt-BR').includes(q))&&catOk(p.categoria)&&(!fe||p.estacao===fe)&&(!fs||p.serve===fs)&&(!ff||pendencias(p).some(x=>x[0]===ff)));
   list.sort((a,b)=>String(a.categoria).localeCompare(String(b.categoria),'pt-BR')||String(a.nome).localeCompare(String(b.nome),'pt-BR'));
   shown=list.map(p=>p.id);$('selAll').hidden=tab!=='conferencia';renderBulk();
+  $('clearF').hidden=!(q||fe||fs||ff||grpSel.size);
   $('count').textContent=list.length+(list.length===1?' peça':' peças')+(tab==='conferencia'?' com algo a completar':tab==='lixeira'?' na lixeira':'');
   $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">'+(tab==='conferencia'?'Nada para conferir. Tudo completo ♡':'Nenhuma peça aqui.')+'</div>';
   $('grid').querySelectorAll('[data-card]').forEach(markMissing)}
@@ -269,6 +291,9 @@ $('grid').addEventListener('change',async e=>{const el=e.target;
     edit(el.dataset.id,{[el.dataset.k]:el.value},0);refreshCard(el.dataset.id)}
   if(el.matches('input[data-photo]')&&el.files[0]){const id=el.dataset.photo;if(!assets){setSave('error','Envio de foto indisponível aqui.');return}
     setSave('pending','Enviando foto…');try{const r=await assets.upload(el.files[0]);edit(id,{foto:r.url,foto_asset:r.id,rotacao:0,refotografar:false},0);refreshCard(id)}catch(err){setSave('error','A foto não foi enviada. Tente de novo.')}}});
+$('clearF').addEventListener('click',()=>{$('q').value='';$('fEst').value='';$('fServe').value='';$('fFalta').value='';grpSel.clear();catOff.clear();render()});
+// Tapping the photo opens or closes the piece's editor
+$('grid').addEventListener('click',e=>{const img=e.target.closest('.photo img');if(!img)return;const id=img.closest('[data-card]').dataset.card;open.has(id)?open.delete(id):open.add(id);refreshCard(id)});
 $('grid').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
   if(d.toggle){open.has(d.toggle)?open.delete(d.toggle):open.add(d.toggle);refreshCard(d.toggle)}
   if(d.rot){const p=pecas[d.id];const r=(((p.rotacao||0)+Number(d.rot))%360+360)%360;edit(d.id,{rotacao:r},400);t.closest('.photo').querySelector('img').setAttribute('style',rotStyle(r))}
@@ -281,6 +306,91 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)
   if(d.restaurar){edit(d.restaurar,{situacao:'ativa',excluida_em:'',baixa_motivo:'',baixa_data:''},0);refreshCard(d.restaurar)}
   if(d.apagar){if(arm())return;const id=d.apagar;delete pecas[id];db.collection('pecas').doc(id).delete().catch(()=>setSave('error','Não foi possível apagar. Tente de novo.'));t.closest('[data-card]').remove();renderTabs()}});
 
+// ---------- small docs (perfil, medidas, config, looks): one coalesced write per document ----------
+let perfil={},medidas={},config={},looksSalvos={};const docTimers={};
+function saveDoc(col,id,data,delay){setSave('pending','Salvando…');clearTimeout(docTimers[col+id]);
+  docTimers[col+id]=setTimeout(()=>db.collection(col).doc(id).set(Object.assign({},data,{atualizado_em:new Date().toISOString()})).then(()=>{if(!anyPending())setSave('','Tudo salvo')},()=>setSave('error','Não salvou. Verifique a conexão.')),delay??600)}
+const typing=()=>$('view').contains(document.activeElement)&&document.activeElement.matches('input,textarea');
+
+// ---------- seasons in Campo Grande (MS): calor out–mar, meia abr/mai/set, frio jun–ago ----------
+const seasonOf=m=>[10,11,12,1,2,3].includes(m)?'calor':[4,5,9].includes(m)?'meia':'frio';
+function seasons3(){const now=new Date(),cur=seasonOf(now.getMonth()+1);let k=1;while(k<12&&seasonOf((now.getMonth()+k)%12+1)===cur)k++;
+  return{cur,next:seasonOf((now.getMonth()+k)%12+1),months:k}}
+const fitsSeason=(p,s)=>!p.estacao||p.estacao===s||p.estacao==='meia';
+const usable=p=>ativa(p)&&p.serve==='sim'&&p.conservacao!=='defeito';
+
+// ---------- Compras: minimums per type and season (initial suggestion, editable) ----------
+const ROWS=[['bodyc','Bodies manga curta / sem manga',['Body manga curta','Body sem manga'],[6,4,2]],['bodyl','Bodies manga longa',['Body manga longa'],[1,3,5]],
+  ['blusac','Blusas manga curta / sem manga',['Blusa manga curta','Blusa sem manga'],[5,3,1]],['blusal','Blusas manga longa',['Blusa manga longa'],[1,3,5]],
+  ['short','Shorts e saias',['Short','Saia'],[5,2,0]],['calca','Calças',['Calça'],[2,4,6]],
+  ['unica','Vestidos, jardineiras e macacões',['Vestido manga curta','Vestido sem manga','Vestido manga longa','Jardineira','Macacão'],[3,2,1]],
+  ['pijc','Pijamas de calor',['Pijama manga curta'],[3,2,0]],['pijl','Pijamas de frio',['Pijama manga longa'],[1,2,4]],
+  ['agas','Casacos e agasalhos',['Casaco','Colete','Poncho'],[0,2,3]],['meias','Meias (pares)',['Meias'],[3,5,7]]];
+const SI={calor:0,meia:1,frio:2};
+function minimo(row,s){const c=(config.minimos||{})[row[0]];return c&&c[s]!=null&&c[s]!==''?Number(c[s]):row[3][SI[s]]}
+function tabelaCompras(s){const all=Object.values(pecas);let total=0;
+  const linhas=ROWS.map(r=>{const tem=all.filter(p=>usable(p)&&r[2].includes(p.categoria)&&fitsSeason(p,s)).length,
+    prox=all.filter(p=>ativa(p)&&p.serve==='grande'&&r[2].includes(p.categoria)).length,min=minimo(r,s),falta=Math.max(0,min-tem);total+=falta;
+    return '<tr><td>'+esc(r[1])+'</td><td class="n">'+tem+'</td><td class="n"><input type="number" min="0" inputmode="numeric" data-min="'+r[0]+'" data-season="'+s+'" value="'+min+'" aria-label="Mínimo de '+esc(r[1])+'"></td>'+
+      '<td class="n">'+(falta?'<span class="buy">'+falta+'</span>':'<span class="okc">✓</span>')+'</td><td class="n">'+(prox||'')+'</td></tr>'}).join('');
+  return{total,html:'<div class="scroll"><table class="tbl"><thead><tr><th>Tipo</th><th>Tem</th><th>Mínimo</th><th>Comprar</th><th>Próx. tamanho</th></tr></thead><tbody>'+linhas+'</tbody></table></div>'}}
+function renderCompras(){if(typing())return;const{cur,next,months}=seasons3(),a=tabelaCompras(cur),all=Object.values(pecas).map((p,i)=>p);
+  const repor=Object.entries(pecas).filter(([,p])=>ativa(p)&&p.serve==='sim'&&['desgastada','defeito'].includes(p.conservacao)),pequenas=Object.entries(pecas).filter(([,p])=>ativa(p)&&p.serve==='pequena');
+  const nome=s=>label(seasons,s).toLowerCase();
+  $('view').innerHTML='<div class="panel"><h2>Para agora: '+esc(label(seasons,cur))+'</h2><p class="hint">Conta só as peças que servem, sem defeito, desta estação (as de meia estação contam em todas). Os mínimos são uma sugestão inicial: ajuste à rotina de vocês.'+
+    (perfil.tamanho_atual?' Tamanho atual: <b>'+esc(perfil.tamanho_atual)+'</b>.':' Informe o tamanho atual na aba Perfil.')+'</p>'+a.html+'<p class="hint">Total a comprar: <b>'+a.total+'</b> peça(s). "Próx. tamanho" = peças que ainda estão grandes, já guardadas.</p></div>'+
+    (months<=2?'<div class="panel"><h2>Chegando em '+months+(months===1?' mês':' meses')+': '+esc(label(seasons,next))+'</h2>'+tabelaCompras(next).html+'</div>':'')+
+    '<div class="panel"><h2>Repor ('+repor.length+')</h2><p class="hint">Peças que servem, mas estão desgastadas ou com defeito.</p>'+(repor.length?'<ul>'+repor.map(([,p])=>'<li>'+esc(p.nome)+' · '+esc(label(conds,p.conservacao))+'</li>').join('')+'</ul>':'<p class="hint">Nada para repor.</p>')+'</div>'+
+    '<div class="panel"><h2>Já ficaram pequenas ('+pequenas.length+')</h2><p class="hint">Considere excluir ou separar para doação.</p>'+(pequenas.length?'<ul>'+pequenas.map(([,p])=>'<li>'+esc(p.nome)+'</li>').join('')+'</ul>':'<p class="hint">Nenhuma.</p>')+'</div>'}
+$('view').addEventListener('input',e=>{const i=e.target;if(i.dataset.min){const m=Object.assign({},config.minimos);m[i.dataset.min]=Object.assign({},m[i.dataset.min],{[i.dataset.season]:i.value});config=Object.assign({},config,{minimos:m});saveDoc('config','compras',config)}});
+
+// ---------- Looks: rule-based combinations (top + bottom, or one-piece; coat when cold) ----------
+let lookSeason='',lookSeed=1;
+const rnd=()=>{lookSeed=(lookSeed*16807)%2147483647;return lookSeed/2147483647};
+const pickOne=a=>a[Math.floor(rnd()*a.length)];
+function gerarLooks(s){const all=Object.entries(pecas).map(([id,p])=>Object.assign({id},p)).filter(p=>usable(p)&&p.foto&&fitsSeason(p,s)),w=p=>String(p.categoria).split(' ')[0],
+  tops=all.filter(p=>['Blusa','Body'].includes(w(p))&&(s==='frio'?/longa/.test(p.categoria):s==='calor'?!/longa/.test(p.categoria):true)),
+  bottoms=all.filter(p=>(s==='calor'?['Short','Saia']:s==='frio'?['Calça']:['Short','Saia','Calça']).includes(p.categoria)),
+  unicas=all.filter(p=>['Vestido','Jardineira','Macacão'].includes(w(p))),coats=all.filter(p=>['Casaco','Colete','Poncho'].includes(p.categoria));
+  const out=[],seen=new Set();for(let i=0;i<40&&out.length<8;i++){let l=[];
+    if(unicas.length&&(!tops.length||!bottoms.length||rnd()<.35))l=[pickOne(unicas)];else if(tops.length&&bottoms.length)l=[pickOne(tops),pickOne(bottoms)];else break;
+    if(s==='frio'&&coats.length)l.push(pickOne(coats));const k=l.map(p=>p.id).sort().join('|');if(!seen.has(k)){seen.add(k);out.push(l)}}
+  return out}
+function lookCard(l,saved){return '<div class="look"><div class="pics">'+l.map(p=>'<div><img loading="lazy" src="'+esc(p.foto)+'" alt="'+esc(p.nome)+'" style="'+rotStyle(p.rotacao)+'"></div>').join('')+'</div>'+
+  '<div class="txt">'+l.map(p=>'<span>'+esc(p.nome)+'</span>').join('')+(saved?'<button type="button" class="btn" data-unsave="'+esc(saved)+'">Remover dos favoritos</button>':'<button type="button" class="btn primary" data-save="'+esc(l.map(p=>p.id).join('|'))+'">♡ Salvar look</button>')+'</div></div>'}
+function renderLooks(){const s=lookSeason||seasons3().cur,looks=gerarLooks(s);
+  const fav=Object.entries(looksSalvos).map(([id,d])=>[id,(d.pecas||[]).map(pid=>pecas[pid]&&Object.assign({id:pid},pecas[pid])).filter(Boolean)]).filter(x=>x[1].length);
+  $('view').innerHTML='<div class="panel"><h2>Ideias de looks</h2><p class="hint">Combinações com o que serve e está em bom estado. Ainda sem IA: as combinações são sorteadas por regra (parte de cima + parte de baixo, ou peça única; casaco no frio).</p>'+
+    '<div class="row"><select id="lookS" aria-label="Estação">'+seasons.slice(1).map(o=>'<option value="'+o[0]+'"'+(o[0]===s?' selected':'')+'>'+o[1]+'</option>').join('')+'</select><button type="button" class="btn primary" id="lookMore">↻ Outras ideias</button></div></div>'+
+    (looks.length?'<div class="looks">'+looks.map(l=>lookCard(l)).join('')+'</div>':'<div class="empty">Ainda não há peças suficientes desta estação com "serve" marcado.</div>')+
+    '<div class="panel" style="margin-top:14px"><h2>Looks salvos ('+fav.length+')</h2>'+(fav.length?'<div class="looks">'+fav.map(([id,l])=>lookCard(l,id)).join('')+'</div>':'<p class="hint">Toque em "♡ Salvar look" para guardar os favoritos.</p>')+'</div>'}
+$('view').addEventListener('change',e=>{if(e.target.id==='lookS'){lookSeason=e.target.value;renderLooks()}});
+$('view').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id==='lookMore'){lookSeed=(Date.now()%2147483646)+1;renderLooks()}
+  if(b.dataset.save){const id='l-'+Date.now().toString(36);looksSalvos[id]={pecas:b.dataset.save.split('|'),estacao:lookSeason||seasons3().cur};saveDoc('looks',id,looksSalvos[id],0);b.textContent='♡ Salvo';b.disabled=true;renderLooks()}
+  if(b.dataset.unsave){const id=b.dataset.unsave;delete looksSalvos[id];db.collection('looks').doc(id).delete();renderLooks()}
+  if(b.dataset.delmed){if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Confirmar';return}const id=b.dataset.delmed;delete medidas[id];db.collection('medidas').doc(id).delete();renderPerfil()}
+  if(b.id==='addMed'){const v=k=>$('m_'+k).value.trim(),d={data:v('data')||new Date().toISOString().slice(0,10),altura:v('altura'),peso:v('peso'),cintura:v('cintura'),pe:v('pe'),torax:v('torax')};
+    if(!d.altura&&!d.peso&&!d.cintura&&!d.pe&&!d.torax){setSave('error','Preencha pelo menos uma medida.');return}const id='m-'+d.data+'-'+Date.now().toString(36);medidas[id]=d;saveDoc('medidas',id,d,0);renderPerfil()}});
+
+// ---------- Perfil: child data and dated measurements ----------
+function idade(n){if(!n)return '';const b=new Date(n+'T12:00:00'),t=new Date();let m=(t.getFullYear()-b.getFullYear())*12+t.getMonth()-b.getMonth();if(t.getDate()<b.getDate())m--;if(m<0)return '';
+  return m<24?m+(m===1?' mês':' meses'):Math.floor(m/12)+' anos'+(m%12?' e '+(m%12)+(m%12===1?' mês':' meses'):'')}
+function pf(k,lab,type,extra){return '<label class="f">'+lab+'<input data-pf="'+k+'" type="'+(type||'text')+'" value="'+esc(perfil[k])+'" '+(extra||'')+'></label>'}
+function renderPerfil(){if(typing())return;const sizes=distinct('tamanho'),ms=Object.entries(medidas).sort((a,b)=>String(b[1].data).localeCompare(String(a[1].data)));
+  const sizeSel=(k,lab)=>'<label class="f">'+lab+'<select data-pf="'+k+'"><option value="">—</option>'+sizes.map(s=>'<option'+(s===perfil[k]?' selected':'')+'>'+esc(s)+'</option>').join('')+'</select></label>';
+  $('view').innerHTML='<div class="panel"><h2>Perfil</h2><div class="form">'+pf('nome','Nome')+pf('nascimento','Data de nascimento','date')+
+    '<label class="f">Sexo<select data-pf="sexo"><option value="">—</option><option value="menina"'+(perfil.sexo==='menina'?' selected':'')+'>Menina</option><option value="menino"'+(perfil.sexo==='menino'?' selected':'')+'>Menino</option></select></label>'+
+    pf('cidade','Cidade','text','placeholder="Campo Grande - MS"')+sizeSel('tamanho_atual','Tamanho atual')+sizeSel('proximo_tamanho','Próximo tamanho')+'</div>'+
+    (perfil.nascimento?'<p class="hint">Idade hoje: <b>'+esc(idade(perfil.nascimento))+'</b></p>':'')+'</div>'+
+    '<div class="panel"><h2>Medidas</h2><p class="hint">Anote de tempos em tempos. Com o histórico, dá para prever quando ela muda de tamanho.</p><div class="form">'+
+    '<label class="f">Data<input id="m_data" type="date" value="'+new Date().toISOString().slice(0,10)+'"></label><label class="f">Altura (cm)<input id="m_altura" inputmode="decimal"></label><label class="f">Peso (kg)<input id="m_peso" inputmode="decimal"></label>'+
+    '<label class="f">Cintura (cm)<input id="m_cintura" inputmode="decimal"></label><label class="f">Pé (cm)<input id="m_pe" inputmode="decimal"></label><label class="f">Tórax (cm, opcional)<input id="m_torax" inputmode="decimal"></label></div>'+
+    '<button type="button" class="btn primary" id="addMed" style="justify-self:start">＋ Adicionar medida</button>'+
+    (ms.length?'<div class="scroll"><table class="tbl"><thead><tr><th>Data</th><th>Altura</th><th>Peso</th><th>Cintura</th><th>Pé</th><th>Tórax</th><th></th></tr></thead><tbody>'+
+      ms.map(([id,m])=>'<tr><td>'+esc(String(m.data).split('-').reverse().join('/'))+'</td><td>'+esc(m.altura)+'</td><td>'+esc(m.peso)+'</td><td>'+esc(m.cintura)+'</td><td>'+esc(m.pe)+'</td><td>'+esc(m.torax)+'</td><td><button type="button" class="btn danger" data-delmed="'+esc(id)+'">Apagar</button></td></tr>').join('')+'</tbody></table></div>':'<p class="hint">Nenhuma medida anotada ainda.</p>')+'</div>'}
+$('view').addEventListener('input',e=>{const i=e.target;if(i.dataset.pf){perfil=Object.assign({},perfil,{[i.dataset.pf]:i.value});saveDoc('perfil','principal',perfil,i.tagName==='SELECT'||i.type==='date'?0:600)}});
+
 // ---------- data ----------
 (async function start(){
   db=await claude.use('db');
@@ -289,7 +399,9 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)
   setSave('','Tudo salvo');
   db.collection('pecas').onSnapshot(s=>{const first=!loaded;
     s.docChanges().forEach(ch=>{const id=ch.doc.id;if(pending[id]||inflight[id])return;if(ch.type==='removed')delete pecas[id];else pecas[id]=Object.assign({},ch.doc.data())});
-    loaded=true;if(first)render();else s.docChanges().forEach(ch=>refreshCard(ch.doc.id))},()=>setSave('error','A conexão caiu. Recarregue a página.'));
+    loaded=true;if(first||VIEWS.includes(tab))render();else s.docChanges().forEach(ch=>refreshCard(ch.doc.id))},()=>setSave('error','A conexão caiu. Recarregue a página.'));
+  const small=(col,set)=>db.collection(col).onSnapshot(s=>{set(Object.fromEntries(s.docs.map(d=>[d.id,d.data()])));if(VIEWS.includes(tab)&&!typing())render()},()=>{});
+  small('perfil',m=>{perfil=Object.assign({},m.principal)});small('medidas',m=>{medidas=m});small('config',m=>{config=Object.assign({},m.compras)});small('looks',m=>{looksSalvos=m});
 })();
 })();
 </script>

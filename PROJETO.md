@@ -74,7 +74,9 @@ As sugestões de correspondência entre fotos e peças (hipóteses, **não decis
 ## Próximos passos
 
 1. Completar as peças da aba **Conferência** no site principal (marca, tamanho, avisos, refotografar).
-2. Conversar a estrutura das páginas de **compras** e **looks** (Etapas 3 e 4).
+2. Preencher o **Perfil** (nascimento, tamanho atual) e a primeira medida.
+3. Ajustar os **mínimos** da aba Compras à rotina da família (hoje são sugestão inicial) e pesquisar quantidades de referência e tabelas das marcas.
+4. Looks com IA (skill que olha as fotos) — hoje os looks são por regra.
 
 ## Etapas do projeto
 
