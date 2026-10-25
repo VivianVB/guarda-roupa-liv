@@ -229,19 +229,29 @@ const VIEWS=['compras','looks','perfil'];
 const groups=[['cima','Partes de cima',['Blusa','Body']],['baixo','Partes de baixo',['Calça','Short','Saia']],['unica','Peças únicas',['Vestido','Jardineira','Macacão']],
   ['pijama','Pijamas',['Pijama']],['agasalho','Agasalhos',['Casaco','Colete','Poncho']],['acessorio','Acessórios',['Meias','Chapéu','Calçado','Acessório']]];
 const groupOf=c=>{const w=String(c).split(' ')[0];const g=groups.find(g=>g[2].includes(w));return g?g[0]:'outros'};
-// Groups toggle with one tap and combine; the second row refines inside the selected groups
-let grpSel=new Set(),catOff=new Set();
-const catOk=c=>!grpSel.size||(grpSel.has(groupOf(c))&&!catOff.has(c));
+// Groups toggle with one tap and combine. The second row narrows the selected groups:
+// nothing picked there = every category of the groups; tapping categories (or a type such as "Bodies (todos)") shows only those.
+let grpSel=new Set(),catOff=new Set();// catOff keeps its name but now holds the categories picked in the second row
+const baseOf=c=>String(c).split(' ')[0];
+const plural={Body:'Bodies (todos)',Blusa:'Blusas (todas)',Vestido:'Vestidos (todos)',Pijama:'Pijamas (todos)'};
+// A pick narrows only its own group: "Blusa manga curta" + "Partes de baixo" shows those blouses and every bottom
+function catOk(c){if(!grpSel.size)return true;const g=groupOf(c);if(!grpSel.has(g))return false;return ![...catOff].some(x=>groupOf(x)===g)||catOff.has(c)}
 function renderCats(){const used=[...new Set(Object.values(pecas).filter(ativa).map(p=>p.categoria).filter(Boolean))];
   const gs=groups.concat([['outros','Outros',[]]]).filter(g=>used.some(c=>groupOf(c)===g[0]));
   $('grpChips').innerHTML='<button type="button" class="fchip" data-grp="" aria-pressed="'+!grpSel.size+'">Tudo</button>'+
     gs.map(([k,l])=>'<button type="button" class="fchip" data-grp="'+k+'" aria-pressed="'+grpSel.has(k)+'">'+esc(l)+'</button>').join('');
   const sub=used.filter(c=>grpSel.has(groupOf(c))).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const bases=[...new Set(sub.map(baseOf))].filter(b=>sub.filter(c=>baseOf(c)===b).length>1);
   $('subChips').hidden=sub.length<2;
-  $('subChips').innerHTML=sub.map(c=>'<button type="button" class="fchip" data-subcat="'+esc(c)+'" aria-pressed="'+!catOff.has(c)+'">'+esc(c)+'</button>').join('')}
+  $('subChips').innerHTML=bases.map(b=>{const cs=sub.filter(c=>baseOf(c)===b);return '<button type="button" class="fchip" data-subbase="'+esc(b)+'" aria-pressed="'+cs.every(c=>catOff.has(c))+'">'+esc(plural[b]||b+' (todos)')+'</button>'}).join('')+
+    sub.map(c=>'<button type="button" class="fchip" data-subcat="'+esc(c)+'" aria-pressed="'+catOff.has(c)+'">'+esc(c)+'</button>').join('')}
 $('grpChips').addEventListener('click',e=>{const b=e.target.closest('[data-grp]');if(!b)return;const k=b.dataset.grp;
-  if(!k){grpSel.clear();catOff.clear()}else if(grpSel.has(k)){grpSel.delete(k)}else grpSel.add(k);render()});
-$('subChips').addEventListener('click',e=>{const b=e.target.closest('[data-subcat]');if(!b)return;const c=b.dataset.subcat;catOff.has(c)?catOff.delete(c):catOff.add(c);render()});
+  if(!k){grpSel.clear();catOff.clear()}else if(grpSel.has(k)){grpSel.delete(k);[...catOff].forEach(c=>{if(groupOf(c)===k)catOff.delete(c)})}else grpSel.add(k);render()});
+$('subChips').addEventListener('click',e=>{const b=e.target.closest('[data-subcat],[data-subbase]');if(!b)return;
+  if(b.dataset.subcat){const c=b.dataset.subcat;catOff.has(c)?catOff.delete(c):catOff.add(c)}
+  else{const used=[...new Set(Object.values(pecas).filter(ativa).map(p=>p.categoria))].filter(c=>grpSel.has(groupOf(c))&&baseOf(c)===b.dataset.subbase),all=used.every(c=>catOff.has(c));
+    used.forEach(c=>all?catOff.delete(c):catOff.add(c))}
+  render()});
 function renderFalta(){const conf=tab==='conferencia';$('fFalta').hidden=!conf;if(!conf)return;const cur=$('fFalta').value,n={};
   lists().conferencia.forEach(p=>pendencias(p).forEach(([k,l])=>{n[k]=n[k]||[l,0];n[k][1]++}));
   $('fFalta').innerHTML='<option value="">Falta: tudo</option>'+Object.entries(n).sort((a,b)=>b[1][1]-a[1][1]).map(([k,[l,c]])=>'<option value="'+k+'"'+(k===cur?' selected':'')+'>Falta: '+esc(l)+' ('+c+')</option>').join('')}
