@@ -135,6 +135,7 @@
       "conjunto": "",
       "conservacao": "boa",
       "estacao": "",
+      "excluida_em": "25/10/2026",
       "foto": "",
       "foto_origem": "",
       "marca": "Carter's",
@@ -143,7 +144,7 @@
       "refotografar": false,
       "rotacao": 0,
       "serve": "",
-      "situacao": "ativa",
+      "situacao": "excluida",
       "tamanho": "18 meses"
     },
     {
@@ -189,6 +190,7 @@
       "conjunto": "",
       "conservacao": "boa",
       "estacao": "",
+      "excluida_em": "25/10/2026",
       "foto": "",
       "foto_origem": "",
       "marca": "Bebê do Papai",
@@ -197,7 +199,7 @@
       "refotografar": false,
       "rotacao": 0,
       "serve": "",
-      "situacao": "ativa",
+      "situacao": "excluida",
       "tamanho": "9-12 meses"
     },
     {
@@ -245,6 +247,7 @@
       "conjunto": "",
       "conservacao": "boa",
       "estacao": "",
+      "excluida_em": "25/10/2026",
       "foto": "",
       "foto_origem": "",
       "marca": "",
@@ -253,7 +256,7 @@
       "refotografar": false,
       "rotacao": 0,
       "serve": "",
-      "situacao": "ativa",
+      "situacao": "excluida",
       "tamanho": ""
     },
     {
