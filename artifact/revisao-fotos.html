@@ -64,17 +64,14 @@ label.f:has(.miss){color:var(--warn)}
 .row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 auto}
 .danger.armed{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .empty{grid-column:1/-1;text-align:center;border:1px dashed var(--line);border-radius:14px;padding:32px 16px;color:var(--muted)}
-/* Category picker: groups of checkboxes, opens below the toolbar */
-.catpick{flex:1 1 180px;position:relative}
-.catpick summary{list-style:none;cursor:pointer;border:1px solid var(--line);border-radius:9px;padding:9px;background:var(--surface);font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.catpick summary::-webkit-details-marker{display:none}
-.catpick[open] summary{border-color:var(--accent)}
-.catpanel{position:absolute;z-index:6;top:calc(100% + 6px);left:0;width:min(560px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgb(0 0 0 / .15);padding:12px;display:grid;gap:10px}
-.cgroup{display:grid;gap:4px}
-.cgroup>label{font-weight:700}
-.cgroup .items{display:flex;flex-wrap:wrap;gap:4px 12px;padding-left:26px}
-.catpanel label{display:flex;align-items:center;gap:6px;font-size:.88rem;cursor:pointer}
-.catpanel input{width:18px;height:18px;accent-color:var(--accent)}
+/* Category filter: scrollable chip rows (groups, then the selected groups' categories) */
+.chiprow{display:flex;gap:6px;overflow-x:auto;padding-top:8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chiprow::-webkit-scrollbar{display:none}
+.fchip{flex:0 0 auto;min-height:38px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 13px;font-weight:700;font-size:.86rem;white-space:nowrap}
+.fchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chiprow.sub .fchip{min-height:32px;padding:5px 11px;font-size:.8rem;font-weight:600}
+.chiprow.sub .fchip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--fg)}
+@media (max-width:560px){.tools #q{flex-basis:100%}.bar{position:static}}/* on phones the tall toolbar scrolls away instead of covering half the screen */
 /* Bulk edit: selection boxes and a bar fixed to the bottom edge */
 .sel{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:700;color:var(--muted)}
 .sel input{width:20px;height:20px;accent-color:var(--accent)}
@@ -106,7 +103,6 @@ body.has-bulk main{padding-bottom:150px}
   <div class="tabs" role="tablist" id="tabs"></div>
   <div class="tools" id="tools">
     <input id="q" type="search" placeholder="Buscar peça, marca, tamanho…" aria-label="Buscar">
-    <details class="catpick" id="catPick"><summary id="catSum">Categorias: todas</summary><div class="catpanel" id="catPanel"></div></details>
     <select id="fEst" aria-label="Estação"><option value="">Todas as estações</option><option value="calor">Calor</option><option value="meia">Meia estação</option><option value="frio">Frio</option></select>
     <select id="fServe" aria-label="Serve"><option value="">Serve: todas</option><option value="sim">Serve</option><option value="grande">Ainda grande</option><option value="pequena">Já ficou pequena</option></select>
     <select id="fFalta" aria-label="O que falta" hidden></select>
@@ -114,6 +110,8 @@ body.has-bulk main{padding-bottom:150px}
     <button class="btn primary" id="add" type="button">＋ Nova peça</button>
     <span class="save" id="save"><span class="dot"></span><span id="saveText">Conectando…</span></span>
   </div>
+  <div class="chiprow" id="grpChips" aria-label="Filtrar por grupo"></div>
+  <div class="chiprow sub" id="subChips" aria-label="Refinar categorias" hidden></div>
 </div></div>
 <main class="wrap"><p class="count" id="count"></p><section class="grid" id="grid"><div class="empty">Carregando o guarda-roupa…</div></section></main>
 <div class="bulk" id="bulk" hidden><div class="in">
@@ -213,28 +211,26 @@ function renderTabs(){const l=lists();$('tabs').innerHTML=[['catalogo','Catálog
 const groups=[['cima','Partes de cima',['Blusa','Body']],['baixo','Partes de baixo',['Calça','Short','Saia']],['unica','Peças únicas',['Vestido','Jardineira','Macacão']],
   ['pijama','Pijamas',['Pijama']],['agasalho','Agasalhos',['Casaco','Colete','Poncho']],['acessorio','Acessórios',['Meias','Chapéu','Calçado','Acessório']]];
 const groupOf=c=>{const w=String(c).split(' ')[0];const g=groups.find(g=>g[2].includes(w));return g?g[0]:'outros'};
-let catSel=new Set();
-function renderCats(){const used=[...new Set(Object.values(pecas).filter(ativa).map(p=>p.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-  const gs=groups.concat([['outros','Outros',[]]]).map(([k,l])=>[k,l,used.filter(c=>groupOf(c)===k)]).filter(g=>g[2].length);
-  $('catPanel').innerHTML=gs.map(([k,l,cs])=>{const all=cs.every(c=>catSel.has(c)),some=cs.some(c=>catSel.has(c));
-    return '<div class="cgroup"><label><input type="checkbox" data-group="'+k+'"'+(all?' checked':'')+(some&&!all?' data-some="1"':'')+'> '+esc(l)+'</label><div class="items">'+
-      cs.map(c=>'<label><input type="checkbox" data-cat="'+esc(c)+'"'+(catSel.has(c)?' checked':'')+'> '+esc(c)+'</label>').join('')+'</div></div>'}).join('')+
-    (catSel.size?'<button type="button" class="btn" id="catClear">Limpar categorias</button>':'');
-  $('catPanel').querySelectorAll('[data-some]').forEach(i=>i.indeterminate=true);
-  $('catSum').textContent=!catSel.size?'Categorias: todas':catSel.size===1?[...catSel][0]:catSel.size+' categorias'}
-$('catPanel').addEventListener('change',e=>{const i=e.target;
-  if(i.dataset.cat){i.checked?catSel.add(i.dataset.cat):catSel.delete(i.dataset.cat)}
-  if(i.dataset.group){i.closest('.cgroup').querySelectorAll('[data-cat]').forEach(c=>{i.checked?catSel.add(c.dataset.cat):catSel.delete(c.dataset.cat)})}
-  render()});
-$('catPanel').addEventListener('click',e=>{if(e.target.id==='catClear'){catSel.clear();render()}});
-document.addEventListener('click',e=>{if(!$('catPick').contains(e.target))$('catPick').open=false});
+// Groups toggle with one tap and combine; the second row refines inside the selected groups
+let grpSel=new Set(),catOff=new Set();
+const catOk=c=>!grpSel.size||(grpSel.has(groupOf(c))&&!catOff.has(c));
+function renderCats(){const used=[...new Set(Object.values(pecas).filter(ativa).map(p=>p.categoria).filter(Boolean))];
+  const gs=groups.concat([['outros','Outros',[]]]).filter(g=>used.some(c=>groupOf(c)===g[0]));
+  $('grpChips').innerHTML='<button type="button" class="fchip" data-grp="" aria-pressed="'+!grpSel.size+'">Tudo</button>'+
+    gs.map(([k,l])=>'<button type="button" class="fchip" data-grp="'+k+'" aria-pressed="'+grpSel.has(k)+'">'+esc(l)+'</button>').join('');
+  const sub=used.filter(c=>grpSel.has(groupOf(c))).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  $('subChips').hidden=sub.length<2;
+  $('subChips').innerHTML=sub.map(c=>'<button type="button" class="fchip" data-subcat="'+esc(c)+'" aria-pressed="'+!catOff.has(c)+'">'+esc(c)+'</button>').join('')}
+$('grpChips').addEventListener('click',e=>{const b=e.target.closest('[data-grp]');if(!b)return;const k=b.dataset.grp;
+  if(!k){grpSel.clear();catOff.clear()}else if(grpSel.has(k)){grpSel.delete(k)}else grpSel.add(k);render()});
+$('subChips').addEventListener('click',e=>{const b=e.target.closest('[data-subcat]');if(!b)return;const c=b.dataset.subcat;catOff.has(c)?catOff.delete(c):catOff.add(c);render()});
 function renderFalta(){const conf=tab==='conferencia';$('fFalta').hidden=!conf;if(!conf)return;const cur=$('fFalta').value,n={};
   lists().conferencia.forEach(p=>pendencias(p).forEach(([k,l])=>{n[k]=n[k]||[l,0];n[k][1]++}));
   $('fFalta').innerHTML='<option value="">Falta: tudo</option>'+Object.entries(n).sort((a,b)=>b[1][1]-a[1][1]).map(([k,[l,c]])=>'<option value="'+k+'"'+(k===cur?' selected':'')+'>Falta: '+esc(l)+' ('+c+')</option>').join('')}
 function render(){if(!loaded)return;renderTabs();renderCats();renderFalta();
   const q=$('q').value.trim().toLocaleLowerCase('pt-BR'),fe=$('fEst').value,fs=$('fServe').value,ff=tab==='conferencia'?$('fFalta').value:'';
   $('grid').classList.toggle('compact',tab==='conferencia');
-  let list=lists()[tab].filter(p=>(!q||[p.nome,p.marca,p.tamanho,p.categoria,p.notes].join(' ').toLocaleLowerCase('pt-BR').includes(q))&&(!catSel.size||catSel.has(p.categoria))&&(!fe||p.estacao===fe)&&(!fs||p.serve===fs)&&(!ff||pendencias(p).some(x=>x[0]===ff)));
+  let list=lists()[tab].filter(p=>(!q||[p.nome,p.marca,p.tamanho,p.categoria,p.notes].join(' ').toLocaleLowerCase('pt-BR').includes(q))&&catOk(p.categoria)&&(!fe||p.estacao===fe)&&(!fs||p.serve===fs)&&(!ff||pendencias(p).some(x=>x[0]===ff)));
   list.sort((a,b)=>String(a.categoria).localeCompare(String(b.categoria),'pt-BR')||String(a.nome).localeCompare(String(b.nome),'pt-BR'));
   shown=list.map(p=>p.id);$('selAll').hidden=tab!=='conferencia';renderBulk();
   $('count').textContent=list.length+(list.length===1?' peça':' peças')+(tab==='conferencia'?' com algo a completar':tab==='lixeira'?' na lixeira':'');
@@ -264,7 +260,7 @@ $('bApply').addEventListener('click',()=>{
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;open.clear();picked.clear();render();window.scrollTo({top:0})}});
 ['q','fEst','fServe','fFalta'].forEach(id=>$(id).addEventListener('input',render));
 $('add').addEventListener('click',()=>{const id='p-'+Date.now().toString(36);pecas[id]={nome:'',categoria:'',tamanho:'',marca:'',estacao:'',serve:'',conservacao:'boa',conjunto:'',notes:'',foto:'',rotacao:0,refotografar:false,aviso:'',situacao:'ativa',criado_em:new Date().toISOString()};
-  queue(id,0);tab='catalogo';open.clear();open.add(id);$('q').value='';catSel.clear();$('fEst').value='';$('fServe').value='';render();
+  queue(id,0);tab='catalogo';open.clear();open.add(id);$('q').value='';grpSel.clear();catOff.clear();$('fEst').value='';$('fServe').value='';render();
   const el=$('grid').querySelector('[data-card="'+id+'"]');if(el){el.scrollIntoView({block:'center'});el.querySelector('[data-k=nome]').focus()}});
 $('grid').addEventListener('input',e=>{const el=e.target;if(el.matches('input[data-k],textarea[data-k]')){edit(el.dataset.id,{[el.dataset.k]:el.value});markMissing(el.closest('[data-card]'))}});
 $('grid').addEventListener('change',async e=>{const el=e.target;
