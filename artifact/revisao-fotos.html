@@ -101,6 +101,11 @@ body.has-bulk main{padding-bottom:150px}
 .tbl th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .tbl td.n{text-align:center;width:70px}.tbl input{width:58px;text-align:center;padding:5px}
 .buy{font-weight:700;color:var(--accent)}.okc{color:var(--ok);font-weight:700}
+.tbl tr.need td{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.mini{display:grid;gap:4px;font-size:.78rem;line-height:1.25}
+.mini div{aspect-ratio:1/1;background:var(--sunk);border-radius:10px;overflow:hidden}.mini img{width:100%;height:100%;object-fit:contain}
+.mini small{color:var(--muted)}
 .scroll{overflow-x:auto}
 .looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .look{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:grid}
@@ -338,20 +343,25 @@ const ROWS=[['bodyc','Bodies manga curta / sem manga',['Body manga curta','Body 
   ['agas','Casacos e agasalhos',['Casaco','Colete','Poncho'],[0,2,3]],['meias','Meias (pares)',['Meias'],[3,5,7]]];
 const SI={calor:0,meia:1,frio:2};
 function minimo(row,s){const c=(config.minimos||{})[row[0]];return c&&c[s]!=null&&c[s]!==''?Number(c[s]):row[3][SI[s]]}
-function tabelaCompras(s){const all=Object.values(pecas);let total=0;
+// size: what to buy in (current size for now, next size for the season that is coming)
+function tabelaCompras(s,size){const all=Object.values(pecas);let total=0;
   const linhas=ROWS.map(r=>{const tem=all.filter(p=>usable(p)&&r[2].includes(p.categoria)&&fitsSeason(p,s)).length,
-    prox=all.filter(p=>ativa(p)&&p.serve==='grande'&&r[2].includes(p.categoria)).length,min=minimo(r,s),falta=Math.max(0,min-tem);total+=falta;
-    return '<tr><td>'+esc(r[1])+'</td><td class="n">'+tem+'</td><td class="n"><input type="number" min="0" inputmode="numeric" data-min="'+r[0]+'" data-season="'+s+'" value="'+min+'" aria-label="Mínimo de '+esc(r[1])+'"></td>'+
-      '<td class="n">'+(falta?'<span class="buy">'+falta+'</span>':'<span class="okc">✓</span>')+'</td><td class="n">'+(prox||'')+'</td></tr>'}).join('');
-  return{total,html:'<div class="scroll"><table class="tbl"><thead><tr><th>Tipo</th><th>Tem</th><th>Mínimo</th><th>Comprar</th><th>Próx. tamanho</th></tr></thead><tbody>'+linhas+'</tbody></table></div>'}}
-function renderCompras(){if(typing())return;const{cur,next,months}=seasons3(),a=tabelaCompras(cur),all=Object.values(pecas).map((p,i)=>p);
+    guard=all.filter(p=>ativa(p)&&p.serve==='grande'&&r[2].includes(p.categoria)).length,min=minimo(r,s),falta=Math.max(0,min-tem);total+=falta;
+    return '<tr'+(falta?' class="need"':'')+'><td>'+esc(r[1])+'</td><td class="n">'+tem+'</td><td class="n"><input type="number" min="0" inputmode="numeric" data-min="'+r[0]+'" data-season="'+s+'" value="'+min+'" aria-label="Mínimo de '+esc(r[1])+'"></td>'+
+      '<td class="n">'+(falta?falta:'<span class="okc">✓</span>')+'</td><td class="n">'+(falta?esc(size||'—'):'')+'</td><td class="n">'+(guard||'')+'</td></tr>'}).join('');
+  return{total,html:'<div class="scroll"><table class="tbl"><thead><tr><th>Tipo</th><th>Tem</th><th>Mínimo</th><th>Comprar</th><th>Comprar no tamanho</th><th>Já tem guardadas (maiores)</th></tr></thead><tbody>'+linhas+'</tbody></table></div>'}}
+function minis(list){return '<div class="minis">'+list.map(([id,p])=>'<div class="mini"><div>'+(p.foto?'<img loading="lazy" src="'+esc(p.foto)+'" alt="'+esc(p.nome)+'" style="'+rotStyle(p.rotacao)+'">':'')+'</div>'+
+  '<span>'+esc(p.nome)+'</span>'+(p.conservacao&&p.conservacao!=='boa'?'<small>'+esc(label(conds,p.conservacao))+'</small>':'')+'</div>').join('')+'</div>'}
+function renderCompras(){if(typing())return;const{cur,next,months}=seasons3(),a=tabelaCompras(cur,perfil.tamanho_atual);
   const repor=Object.entries(pecas).filter(([,p])=>ativa(p)&&p.serve==='sim'&&['desgastada','defeito'].includes(p.conservacao)),pequenas=Object.entries(pecas).filter(([,p])=>ativa(p)&&p.serve==='pequena');
   const nome=s=>label(seasons,s).toLowerCase();
   $('view').innerHTML='<div class="panel"><h2>Para agora: '+esc(label(seasons,cur))+'</h2><p class="hint">Conta só as peças que servem, sem defeito, desta estação (as de meia estação contam em todas). Os mínimos são uma sugestão inicial: ajuste à rotina de vocês.'+
-    (perfil.tamanho_atual?' Tamanho atual: <b>'+esc(perfil.tamanho_atual)+'</b>.':' Informe o tamanho atual na aba Perfil.')+'</p>'+a.html+'<p class="hint">Total a comprar: <b>'+a.total+'</b> peça(s). "Próx. tamanho" = peças que ainda estão grandes, já guardadas.</p></div>'+
-    (months<=2?'<div class="panel"><h2>Chegando em '+months+(months===1?' mês':' meses')+': '+esc(label(seasons,next))+'</h2>'+tabelaCompras(next).html+'</div>':'')+
-    '<div class="panel"><h2>Repor ('+repor.length+')</h2><p class="hint">Peças que servem, mas estão desgastadas ou com defeito.</p>'+(repor.length?'<ul>'+repor.map(([,p])=>'<li>'+esc(p.nome)+' · '+esc(label(conds,p.conservacao))+'</li>').join('')+'</ul>':'<p class="hint">Nada para repor.</p>')+'</div>'+
-    '<div class="panel"><h2>Já ficaram pequenas ('+pequenas.length+')</h2><p class="hint">Considere excluir ou separar para doação.</p>'+(pequenas.length?'<ul>'+pequenas.map(([,p])=>'<li>'+esc(p.nome)+'</li>').join('')+'</ul>':'<p class="hint">Nenhuma.</p>')+'</div>'}
+    (perfil.tamanho_atual?'':' Informe o tamanho atual e o próximo na aba Perfil para ver em que tamanho comprar.')+'</p>'+a.html+
+    '<p class="hint">Total a comprar: <b>'+a.total+'</b> peça(s), no tamanho atual'+(perfil.tamanho_atual?' (<b>'+esc(perfil.tamanho_atual)+'</b>)':'')+'. Se ela estiver no fim desse tamanho, prefira o próximo'+(perfil.proximo_tamanho?' (<b>'+esc(perfil.proximo_tamanho)+'</b>)':'')+'. '+
+    '"Já tem guardadas (maiores)" são peças que ainda ficam grandes nela e esperam ela crescer: não precisa comprar.</p></div>'+
+    (months<=2?'<div class="panel"><h2>Chegando em '+months+(months===1?' mês':' meses')+': '+esc(label(seasons,next))+'</h2><p class="hint">Para a próxima estação, a sugestão é comprar no próximo tamanho, porque ela vai crescer até lá.</p>'+tabelaCompras(next,perfil.proximo_tamanho||perfil.tamanho_atual).html+'</div>':'')+
+    '<div class="panel"><h2>Repor ('+repor.length+')</h2><p class="hint">Peças que servem, mas estão desgastadas ou com defeito.</p>'+(repor.length?minis(repor):'<p class="hint">Nada para repor.</p>')+'</div>'+
+    '<div class="panel"><h2>Já ficaram pequenas ('+pequenas.length+')</h2><p class="hint">Considere excluir ou separar para doação.</p>'+(pequenas.length?minis(pequenas):'<p class="hint">Nenhuma.</p>')+'</div>'}
 $('view').addEventListener('input',e=>{const i=e.target;if(i.dataset.min){const m=Object.assign({},config.minimos);m[i.dataset.min]=Object.assign({},m[i.dataset.min],{[i.dataset.season]:i.value});config=Object.assign({},config,{minimos:m});saveDoc('config','compras',config)}});
 
 // ---------- Looks: rule-based combinations (top + bottom, or one-piece; coat when cold) ----------
