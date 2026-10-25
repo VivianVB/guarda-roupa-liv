@@ -207,6 +207,7 @@ function editor(p){return '<div class="editor">'+field(p,'nome','Nome')+pick(p,'
   '<div class="row"><label class="btn" style="text-align:center">📷 '+(p.foto?'Trocar foto':'Adicionar foto')+'<input type="file" accept="image/*" data-photo="'+esc(p.id)+'" hidden></label>'+
   '<button type="button" class="btn" data-reshoot="'+esc(p.id)+'">'+(p.refotografar?'Já refotografei':'Pôr para refotografar')+'</button>'+
   (p.aviso?'<button type="button" class="btn" data-clearaviso="'+esc(p.id)+'">Resolvi o aviso</button>':'')+'</div>'+
+  '<button type="button" class="btn primary" data-savepiece="'+esc(p.id)+'">💾 Salvar e fechar</button>'+
   (ativa(p)?'<button type="button" class="btn danger" data-excluir="'+esc(p.id)+'">🗑 Excluir</button>'
     :'<div class="row"><button type="button" class="btn" data-restaurar="'+esc(p.id)+'">Restaurar</button><button type="button" class="btn danger" data-apagar="'+esc(p.id)+'">Apagar de vez</button></div>')+'</div>'}
 function card(p){const m=missing(p),isOpen=open.has(p.id);
@@ -310,6 +311,9 @@ $('clearF').addEventListener('click',()=>{$('q').value='';$('fEst').value='';$('
 // Tapping the photo opens or closes the piece's editor
 $('grid').addEventListener('click',e=>{const img=e.target.closest('.photo img');if(!img)return;const id=img.closest('[data-card]').dataset.card;open.has(id)?open.delete(id):open.add(id);refreshCard(id)});
 $('grid').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
+  // Saves right away (instead of waiting for the pause) and closes the editor
+  if(d.savepiece){const id=d.savepiece;document.activeElement&&document.activeElement.blur();clearTimeout(timers[id]);
+    const done=()=>{open.delete(id);refreshCard(id);setSave('','Salvo ✓')};if(pending[id]){flush(id).then(()=>{if(!pending[id])done()})}else done();return}
   if(d.toggle){open.has(d.toggle)?open.delete(d.toggle):open.add(d.toggle);refreshCard(d.toggle)}
   if(d.rot){const p=pecas[d.id];const r=(((p.rotacao||0)+Number(d.rot))%360+360)%360;edit(d.id,{rotacao:r},400);t.closest('.photo').querySelector('img').setAttribute('style',rotStyle(r))}
   if(d.reshoot){edit(d.reshoot,{refotografar:!pecas[d.reshoot].refotografar},0);refreshCard(d.reshoot)}
