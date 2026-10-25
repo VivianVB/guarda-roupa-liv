@@ -34,6 +34,12 @@ Manter um catálogo digital das roupas da Liv, com fotos, descrições, tamanhos
 - Body verde com bolinhas (Carter's, 18 meses): **manga curta**.
 - O único body sem manga identificado até agora é o **verde-menta Bebê do Papai** (conjunto 9–12 meses), que serve na Liv.
 
+## Decisões da revisão de fotos confirmadas em conversa
+
+- `1000217092.jpg` (calça térmica cinza) faz parte do `conjunto-termico` — vincular a ele, não cadastrar como peça nova (24/10/2026).
+- `1000217099.jpg` (moletom coelhinho) é outra peça, diferente de `casaco-aveludado-rosa-coelho` — cadastrar como nova, categoria Casaco (24/10/2026).
+- Categoria "Moletom" não é usada; moletons entram como Casaco.
+
 ## Catálogo inicial — 23 peças
 
 1. `body-carters-rosa` — Body rosa com babado e borboleta; Carter's; 18 meses; manga curta.
