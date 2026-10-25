@@ -370,23 +370,32 @@ $('view').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)
   if(b.dataset.save){const id='l-'+Date.now().toString(36);looksSalvos[id]={pecas:b.dataset.save.split('|'),estacao:lookSeason||seasons3().cur};saveDoc('looks',id,looksSalvos[id],0);b.textContent='♡ Salvo';b.disabled=true;renderLooks()}
   if(b.dataset.unsave){const id=b.dataset.unsave;delete looksSalvos[id];db.collection('looks').doc(id).delete();renderLooks()}
   if(b.dataset.delmed){if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Confirmar';return}const id=b.dataset.delmed;delete medidas[id];db.collection('medidas').doc(id).delete();renderPerfil()}
+  if(b.id==='savePerfil'){document.querySelectorAll('#view [data-pf]').forEach(i=>{perfil[i.dataset.pf]=i.value});
+    db.collection('perfil').doc('principal').set(Object.assign({},perfil,{atualizado_em:new Date().toISOString()}))
+      .then(()=>{const o=$('perfilOk');if(o)o.textContent='Perfil salvo ✓';setSave('','Tudo salvo')},()=>setSave('error','Não salvou. Verifique a conexão.'));return}
   if(b.id==='addMed'){const v=k=>$('m_'+k).value.trim(),d={data:v('data')||new Date().toISOString().slice(0,10),altura:v('altura'),peso:v('peso'),cintura:v('cintura'),pe:v('pe'),torax:v('torax')};
-    if(!d.altura&&!d.peso&&!d.cintura&&!d.pe&&!d.torax){setSave('error','Preencha pelo menos uma medida.');return}const id='m-'+d.data+'-'+Date.now().toString(36);medidas[id]=d;saveDoc('medidas',id,d,0);renderPerfil()}});
+    if(!d.altura&&!d.peso&&!d.cintura&&!d.pe&&!d.torax){setSave('error','Preencha pelo menos uma medida.');return}const id='m-'+d.data+'-'+Date.now().toString(36);medidas[id]=d;saveDoc('medidas',id,d,0);
+    ['altura','peso','cintura','pe','torax'].forEach(k=>$('m_'+k).value='');renderPerfil()}});
 
 // ---------- Perfil: child data and dated measurements ----------
 function idade(n){if(!n)return '';const b=new Date(n+'T12:00:00'),t=new Date();let m=(t.getFullYear()-b.getFullYear())*12+t.getMonth()-b.getMonth();if(t.getDate()<b.getDate())m--;if(m<0)return '';
   return m<24?m+(m===1?' mês':' meses'):Math.floor(m/12)+' anos'+(m%12?' e '+(m%12)+(m%12===1?' mês':' meses'):'')}
 function pf(k,lab,type,extra){return '<label class="f">'+lab+'<input data-pf="'+k+'" type="'+(type||'text')+'" value="'+esc(perfil[k])+'" '+(extra||'')+'></label>'}
-function renderPerfil(){if(typing())return;const sizes=distinct('tamanho'),ms=Object.entries(medidas).sort((a,b)=>String(b[1].data).localeCompare(String(a[1].data)));
+function renderPerfil(){if(typing())return;
+  // keep measurements typed but not saved yet when the view redraws
+  const draft={};['data','altura','peso','cintura','pe','torax'].forEach(k=>{const i=$('m_'+k);if(i)draft[k]=i.value});
+  renderPerfilHtml();Object.entries(draft).forEach(([k,v])=>{if(v)$('m_'+k).value=v})}
+function renderPerfilHtml(){const sizes=distinct('tamanho'),ms=Object.entries(medidas).sort((a,b)=>String(b[1].data).localeCompare(String(a[1].data)));
   const sizeSel=(k,lab)=>'<label class="f">'+lab+'<select data-pf="'+k+'"><option value="">—</option>'+sizes.map(s=>'<option'+(s===perfil[k]?' selected':'')+'>'+esc(s)+'</option>').join('')+'</select></label>';
   $('view').innerHTML='<div class="panel"><h2>Perfil</h2><div class="form">'+pf('nome','Nome')+pf('nascimento','Data de nascimento','date')+
     '<label class="f">Sexo<select data-pf="sexo"><option value="">—</option><option value="menina"'+(perfil.sexo==='menina'?' selected':'')+'>Menina</option><option value="menino"'+(perfil.sexo==='menino'?' selected':'')+'>Menino</option></select></label>'+
     pf('cidade','Cidade','text','placeholder="Campo Grande - MS"')+sizeSel('tamanho_atual','Tamanho atual')+sizeSel('proximo_tamanho','Próximo tamanho')+'</div>'+
-    (perfil.nascimento?'<p class="hint">Idade hoje: <b>'+esc(idade(perfil.nascimento))+'</b></p>':'')+'</div>'+
+    (perfil.nascimento?'<p class="hint">Idade hoje: <b>'+esc(idade(perfil.nascimento))+'</b></p>':'')+
+    '<div class="row" style="align-items:center"><button type="button" class="btn primary" id="savePerfil" style="flex:0 0 auto">💾 Salvar perfil</button><span class="hint" id="perfilOk"></span></div></div>'+
     '<div class="panel"><h2>Medidas</h2><p class="hint">Anote de tempos em tempos. Com o histórico, dá para prever quando ela muda de tamanho.</p><div class="form">'+
     '<label class="f">Data<input id="m_data" type="date" value="'+new Date().toISOString().slice(0,10)+'"></label><label class="f">Altura (cm)<input id="m_altura" inputmode="decimal"></label><label class="f">Peso (kg)<input id="m_peso" inputmode="decimal"></label>'+
     '<label class="f">Cintura (cm)<input id="m_cintura" inputmode="decimal"></label><label class="f">Pé (cm)<input id="m_pe" inputmode="decimal"></label><label class="f">Tórax (cm, opcional)<input id="m_torax" inputmode="decimal"></label></div>'+
-    '<button type="button" class="btn primary" id="addMed" style="justify-self:start">＋ Adicionar medida</button>'+
+    '<button type="button" class="btn primary" id="addMed" style="justify-self:start">💾 Salvar medida</button>'+
     (ms.length?'<div class="scroll"><table class="tbl"><thead><tr><th>Data</th><th>Altura</th><th>Peso</th><th>Cintura</th><th>Pé</th><th>Tórax</th><th></th></tr></thead><tbody>'+
       ms.map(([id,m])=>'<tr><td>'+esc(String(m.data).split('-').reverse().join('/'))+'</td><td>'+esc(m.altura)+'</td><td>'+esc(m.peso)+'</td><td>'+esc(m.cintura)+'</td><td>'+esc(m.pe)+'</td><td>'+esc(m.torax)+'</td><td><button type="button" class="btn danger" data-delmed="'+esc(id)+'">Apagar</button></td></tr>').join('')+'</tbody></table></div>':'<p class="hint">Nenhuma medida anotada ainda.</p>')+'</div>'}
 $('view').addEventListener('input',e=>{const i=e.target;if(i.dataset.pf){perfil=Object.assign({},perfil,{[i.dataset.pf]:i.value});saveDoc('perfil','principal',perfil,i.tagName==='SELECT'||i.type==='date'?0:600)}});
