@@ -1,0 +1,62 @@
+{
+    "atualizado_em":  "2026-10-24",
+    "origem":  "Exportação parcial de 23/10/2026 + correções confirmadas em conversa (092 faz parte do conjunto térmico; 099 é casaco novo)",
+    "decisoes":  {
+                     "1000217088.jpg":  {
+                                            "status":  "nova",
+                                            "match":  "",
+                                            "nome":  "Blusa verde-menta sem mangas com tule/perolinhas nos ombros",
+                                            "categoria":  "Blusa",
+                                            "tamanho":  "1"
+                                        },
+                     "1000217089.jpg":  {
+                                            "status":  "nova",
+                                            "match":  "",
+                                            "nome":  "Calça floral branca",
+                                            "tamanho":  "1",
+                                            "categoria":  "Calça"
+                                        },
+                     "1000217090.jpg":  {
+                                            "status":  "repetida",
+                                            "match":  "",
+                                            "igual_a":  "1000217089.jpg"
+                                        },
+                     "1000217091.jpg":  {
+                                            "status":  "repetida",
+                                            "match":  "",
+                                            "igual_a":  "1000217088.jpg"
+                                        },
+                     "1000217092.jpg":  {
+                                            "status":  "ja-cadastrada",
+                                            "match":  "conjunto-termico"
+                                        },
+                     "1000217093.jpg":  {
+                                            "status":  "nova",
+                                            "match":  "",
+                                            "nome":  "Blusa preta sem manga canelada",
+                                            "categoria":  "Blusa",
+                                            "tamanho":  "2"
+                                        },
+                     "1000217094.jpg":  {
+                                            "status":  "ja-cadastrada",
+                                            "match":  "pijama-lilas-branco"
+                                        },
+                     "1000217095.jpg":  {
+                                            "status":  "nova",
+                                            "match":  "",
+                                            "nome":  "Chapéu branco laise",
+                                            "categoria":  "Chapéu",
+                                            "tamanho":  "U"
+                                        },
+                     "1000217099.jpg":  {
+                                            "status":  "nova",
+                                            "match":  "",
+                                            "nome":  "Moletom Coelhinho",
+                                            "categoria":  "Casaco"
+                                        },
+                     "1000217100.jpg":  {
+                                            "status":  "nova",
+                                            "match":  ""
+                                        }
+                 }
+}
