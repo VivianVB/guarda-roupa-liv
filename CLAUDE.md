@@ -28,13 +28,11 @@ Contexto completo do projeto, catálogo e etapas: `PROJETO.md`.
 - **Conservação** é um campo da peça com 4 opções: `nova` (nunca usada/com etiqueta), `boa` (usada, sem defeito), `desgastada` (bolinhas, desbotada, gasta), `defeito` (mancha, furo, rasgo, botão/zíper faltando; detalhe vai em Observação). Não preencher pela foto; no máximo citar o que se nota no texto da sugestão. **Padrão: `boa`** — a página mostra "Boa" quando o campo está vazio, e ao ler os dados um `conservacao` ausente vale `boa`.
 - **Conjuntos são separados** em peças próprias (blusa, short, calça…), ligadas pelo campo `conjunto` ("faz conjunto com…"). Ficam como peça única só os **pijamas e macacões**. O conjunto térmico também é separado (blusa térmica + calça térmica). Quando a foto não permite recortar as peças, a foto vai para a lista **Refotografar** (`fotos/<id>.refotografar` com o motivo).
 
-## Revisão de fotos (página privada no claude.ai)
+## Site principal (página privada no claude.ai) — provisório
 
-- Página: https://claude.ai/artifact/Fh6duJeKMsEYtEmQbdmdLg (fonte em `artifact/revisao-fotos.html`; republicar sempre pelo mesmo caminho).
-- Cada escolha da usuária é salva sozinha no banco da página. Ler com a ferramenta `ArtifactData` nesse link:
-  - `fotos/<arquivo>`: `url` da miniatura (asset), `candidate_match` (texto mostrado como "Sugestão"), `candidate_id`, `sugestao` {`nome`, `categoria`, `estacao`} usada para pré-preencher "Peça nova". Cópia das sugestões em `dados/sugestoes.tsv`.
-  - `catalogo/<id>`: `nome`, `categoria`, `tamanho`, `marca`.
-  - `decisoes/<arquivo>`: `status` (`ja-cadastrada`, `nova`, `repetida`, `duvida`, `excluida` = não cadastrar, `a-conferir`), `match`, `nome`, `categoria`, `tamanho`, `marca`, `estacao`, `serve`, `conservacao`, `igual_a`, `conjunto`, `notes`, `rotacao` (graus, sentido horário), `confirmado` (a usuária tocou em "Confirmar"; respostas antigas sem o campo contam como confirmadas), `refotografar` (marcação da usuária, tem prioridade sobre a de `fotos`).
-- Não gravar em lote em `decisoes` enquanto a usuária está usando a página: as versões mudam a cada toque e o lote é recusado. Preferir mudanças na lógica da página ou gravar quando ela parar.
-- Quando a usuária pedir para atualizar, ler `decisoes`, mostrar o resumo e só então aplicar no catálogo.
-- O site antigo no GitHub Pages (`revisao.html` + `dados/decisoes.json`) ficou como histórico; não é mais o lugar de revisar.
+- Página: https://claude.ai/artifact/Fh6duJeKMsEYtEmQbdmdLg (fonte em `artifact/revisao-fotos.html`; republicar sempre pelo mesmo caminho para manter o link). Abas: **Catálogo**, **Conferência** (peças ativas com campo vazio, aviso, sem foto ou para refotografar) e **Baixas**.
+- É provisório: a usuária não quer depender do Claude para acessar. Plano de saída na Etapa 2 do `PROJETO.md`.
+- Dados no banco da página, coleção `pecas/<id>` (ler/gravar com `ArtifactData`): `nome`, `categoria`, `tamanho`, `marca`, `estacao`, `serve` (`sim`/`grande`/`pequena`), `conservacao`, `conjunto`, `notes`, `foto` (url do asset), `foto_origem`, `rotacao`, `refotografar`, `aviso` (texto para a usuária resolver), `situacao` (`ativa`/`baixa`), `baixa_motivo` (`doada`, `vendida`, `passada`, `descartada`, `duplicada`), `baixa_data`.
+- **Cópia aberta dos dados:** depois de qualquer mudança de dados feita pelo Claude, ou quando a usuária pedir, exportar `pecas` para `dados/catalogo.json` e enviar ao GitHub.
+- Não gravar em lote enquanto a usuária está usando a página: as versões mudam a cada toque e o lote é recusado.
+- Histórico: a revisão das fotos terminou em 25/10/2026 (85 conferidas, 7 excluídas, 3 refotografar). As coleções antigas `fotos`, `decisoes` e `catalogo` continuam no banco, sem uso; o site do GitHub Pages (`index.html`, `revisao.html`) é histórico.

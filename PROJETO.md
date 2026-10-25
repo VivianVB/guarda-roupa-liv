@@ -73,8 +73,8 @@ As sugestões de correspondência entre fotos e peças (hipóteses, **não decis
 
 ## Próximos passos
 
-1. Revisar as fotos em `revisao.html` e exportar o JSON de decisões.
-2. Com o JSON, atualizar `dados/catalogo.json`: associar fotos às peças confirmadas e cadastrar as peças novas.
+1. Completar as peças da aba **Conferência** no site principal (marca, tamanho, avisos, refotografar).
+2. Conversar a estrutura das páginas de **compras** e **looks** (Etapas 3 e 4).
 
 ## Etapas do projeto
 
@@ -82,8 +82,8 @@ Objetivo principal: catalogar o guarda-roupa da Liv, podendo adicionar peças e 
 
 | Etapa | O que entrega | Situação |
 | --- | --- | --- |
-| 1. Catálogo | Revisão das fotos, fotos ligadas às peças, cadastro e **baixa** de peças (doada, vendida, passada adiante, perdida) sem apagar o histórico. Lista de peças num arquivo único (`dados/catalogo.json`). | Em andamento |
-| 2. Dados na nuvem com login | Peças e fotos num banco com autenticação (ex.: Supabase), sincronizando celular e computador. Torna o site privado de verdade; depois disso o repositório pode ficar privado. | Planejada |
+| 1. Catálogo | Revisão das fotos (concluída em 25/10/2026), site principal com catálogo, conferência e **baixa** de peças sem apagar o histórico. Cópia aberta em `dados/catalogo.json`. | Em andamento: site principal provisório no claude.ai |
+| 2. Site próprio, sem depender do Claude | Hoje o site principal é uma página privada no claude.ai, que só abre com o login do Claude. A usuária não quer essa dependência. Plano: banco próprio com login (ex.: Supabase, plano gratuito) + site/PWA próprio; migrar a partir de `dados/catalogo.json` e das fotos em `fotos/`. Depois disso, o repositório pode ficar privado. | Planejada |
 | 3. Looks com IA | Peças marcadas com cor, estação e ocasião; a IA sugere combinações a partir das fotos. | Planejada |
 | 4. Lista de compras inteligente | Cruzar tamanho atual, crescimento da Liv, estação e lacunas por categoria para sugerir o que comprar. | Planejada |
 | 5. App | Primeiro um app instalável pelo navegador (PWA); depois, se fizer sentido, app nativo. | Planejada |
