@@ -64,13 +64,26 @@ label.f:has(.miss){color:var(--warn)}
 .row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 auto}
 .danger.armed{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .empty{grid-column:1/-1;text-align:center;border:1px dashed var(--line);border-radius:14px;padding:32px 16px;color:var(--muted)}
-/* Conferência: compact list, small photo on the side */
-.grid.compact{grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr))}
-.compact .card{flex-direction:row;align-items:flex-start}.compact .card.open{grid-column:auto}
-.compact .photo{flex:0 0 112px;width:112px;aspect-ratio:1/1}
+/* Bulk edit: selection boxes and a bar fixed to the bottom edge */
+.sel{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:700;color:var(--muted)}
+.sel input{width:20px;height:20px;accent-color:var(--accent)}
+.card.picked{outline:2px solid var(--accent);outline-offset:-2px}
+.bulk{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgb(0 0 0 / .12);
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bulk .in{max-width:1180px;margin:0 auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bulk select,.bulk input[type=text]{width:auto;flex:1 1 130px}
+.bulk .n{font-weight:700}
+body.has-bulk main{padding-bottom:150px}
+/* Conferência: same 4-up grid as the catalog, with a shorter photo and compact fields */
+.compact .card.open{grid-column:auto}
+.compact .photo{aspect-ratio:4/3}
 .compact .rot{bottom:4px;right:4px;gap:4px}.compact .rot button{width:28px;height:28px;font-size:.9rem}
-.compact .body{flex:1;min-width:0;padding:10px}
-@media (max-width:560px){.grid{grid-template-columns:minmax(0,1fr)}.card.open{grid-column:auto}.compact .photo{flex-basis:84px;width:84px}}
+.compact .body{padding:8px;gap:6px}
+.compact .editor{gap:6px;padding:8px}.compact .two{gap:6px}
+.compact select,.compact input:not([type=checkbox]),.compact textarea{font-size:.82rem;padding:6px}
+.compact label.f{font-size:.66rem;gap:2px}
+.compact .btn{padding:6px 8px;font-size:.78rem}
+@media (max-width:560px){.grid{grid-template-columns:minmax(0,1fr)}.card.open{grid-column:auto}}
 @media (prefers-reduced-motion:reduce){.photo img{transition:none}}
 </style>
 
@@ -86,17 +99,28 @@ label.f:has(.miss){color:var(--warn)}
     <select id="fEst" aria-label="Estação"><option value="">Todas as estações</option><option value="calor">Calor</option><option value="meia">Meia estação</option><option value="frio">Frio</option></select>
     <select id="fServe" aria-label="Serve"><option value="">Serve: todas</option><option value="sim">Serve</option><option value="grande">Ainda grande</option><option value="pequena">Já ficou pequena</option></select>
     <select id="fFalta" aria-label="O que falta" hidden></select>
+    <button class="btn" id="selAll" type="button" hidden>Selecionar todas deste filtro</button>
     <button class="btn primary" id="add" type="button">＋ Nova peça</button>
     <span class="save" id="save"><span class="dot"></span><span id="saveText">Conectando…</span></span>
   </div>
 </div></div>
 <main class="wrap"><p class="count" id="count"></p><section class="grid" id="grid"><div class="empty">Carregando o guarda-roupa…</div></section></main>
+<div class="bulk" id="bulk" hidden><div class="in">
+  <span class="n" id="bulkN"></span>
+  <select id="bMarca" aria-label="Marca para aplicar"></select><input type="text" id="bMarcaNova" placeholder="Nova marca" hidden>
+  <select id="bTam" aria-label="Tamanho para aplicar"></select><input type="text" id="bTamNovo" placeholder="Novo tamanho" hidden>
+  <select id="bEst" aria-label="Estação para aplicar"><option value="">Estação: não mudar</option><option value="calor">Calor</option><option value="meia">Meia estação</option><option value="frio">Frio</option></select>
+  <select id="bServe" aria-label="Serve para aplicar"><option value="">Serve: não mudar</option><option value="sim">Serve</option><option value="grande">Ainda grande</option><option value="pequena">Já ficou pequena</option></select>
+  <label class="sel"><input type="checkbox" id="bOver"> Substituir o que já está preenchido</label>
+  <button class="btn primary" id="bApply" type="button">Aplicar</button>
+  <button class="btn" id="bClear" type="button">Limpar seleção</button>
+</div></div>
 
 <script>
 (function(){
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let db=null,assets=null,pecas={},tab='catalogo',open=new Set(),loaded=false;
+let db=null,assets=null,pecas={},tab='catalogo',open=new Set(),picked=new Set(),loaded=false,shown=[];
 const cats=['Acessório','Blusa manga curta','Blusa manga longa','Blusa sem manga','Body manga curta','Body manga longa','Body sem manga','Calça','Calçado','Casaco','Chapéu','Colete','Jardineira','Macacão','Meias','Pijama manga curta','Pijama manga longa','Poncho','Saia','Short','Vestido manga curta','Vestido manga longa','Vestido sem manga'];
 const seasons=[['','—'],['calor','Calor'],['meia','Meia estação'],['frio','Frio']];
 const fits=[['','—'],['sim','Serve'],['grande','Ainda grande'],['pequena','Já ficou pequena']];
@@ -135,8 +159,17 @@ function rotStyle(r){r=((r||0)%360+360)%360;return 'transform:rotate('+r+'deg)'}
 function field(p,k,lab,ph){return '<label class="f">'+lab+'<input data-k="'+k+'" data-id="'+esc(p.id)+'" value="'+esc(p[k])+'" placeholder="'+esc(ph||'')+'"></label>'}
 function pick(p,k,lab,opts){let cur=String(p[k]||'');if(cur&&!opts.some(o=>o[0]===cur))opts=opts.concat([[cur,cur]]);
   return '<label class="f">'+lab+'<select data-k="'+k+'" data-id="'+esc(p.id)+'">'+opts.map(o=>'<option value="'+esc(o[0])+'"'+(cur===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join('')+'</select></label>'}
+// Brand and size are picked from what already exists; "＋ Novo…" reveals a field to type a new one
+const NEW='__nova__';
+function distinct(k){const n={};Object.values(pecas).forEach(p=>{const v=String(p[k]||'').trim();if(v)n[v]=(n[v]||0)+1});const l=Object.keys(n);
+  return k==='tamanho'?l.sort((a,b)=>sizeRank(a)-sizeRank(b)||a.localeCompare(b,'pt-BR')):l.sort((a,b)=>a.localeCompare(b,'pt-BR'))}
+function sizeRank(s){s=s.toUpperCase();const fixed={RN:0,P:1,M:2,G:3,GG:4,U:9999};if(s in fixed)return fixed[s];
+  const n=parseFloat((s.match(/\d+/)||[])[0]);if(isNaN(n))return 9000;return /MES/.test(s)?10+n:10+n*12+.5}// sizes "1","2"… are years, after "12 meses"
+function listPick(p,k,lab,novo){const cur=String(p[k]||'').trim(),vals=distinct(k);
+  return '<label class="f">'+lab+'<select data-k="'+k+'" data-id="'+esc(p.id)+'"><option value="">Escolher…</option>'+vals.map(v=>'<option'+(v===cur?' selected':'')+'>'+esc(v)+'</option>').join('')+'<option value="'+NEW+'">＋ '+novo+'…</option></select>'+
+  '<input data-k="'+k+'" data-id="'+esc(p.id)+'" data-novo hidden placeholder="'+esc(novo)+'"></label>'}
 function editor(p){return '<div class="editor">'+field(p,'nome','Nome')+pick(p,'categoria','Categoria',[['','Escolher…']].concat(cats.map(c=>[c,c])))+
-  '<div class="two">'+field(p,'tamanho','Tamanho','Ex.: 2')+field(p,'marca','Marca','Ex.: Kyly')+'</div>'+
+  '<div class="two">'+listPick(p,'tamanho','Tamanho','Novo tamanho')+listPick(p,'marca','Marca','Nova marca')+'</div>'+
   '<div class="two">'+pick(p,'estacao','Estação',seasons)+pick(p,'serve','Serve na Liv?',fits)+'</div>'+
   pick(p,'conservacao','Conservação',conds)+field(p,'conjunto','Faz conjunto com (opcional)')+
   '<label class="f">Observação<textarea rows="2" data-k="notes" data-id="'+esc(p.id)+'">'+esc(p.notes)+'</textarea></label>'+
@@ -151,9 +184,10 @@ function card(p){const m=missing(p),isOpen=open.has(p.id)||tab==='conferencia';
     (p.conservacao&&p.conservacao!=='boa'?'<span class="chip '+(p.conservacao==='nova'?'ok':'alert')+'">'+esc(label(conds,p.conservacao))+'</span>':'')+
     (p.refotografar?'<span class="chip alert">📷 Refotografar</span>':'')+
     (!ativa(p)?'<span class="chip">Baixa: '+esc(label(motivos,p.baixa_motivo))+(p.baixa_data?' · '+esc(p.baixa_data):'')+'</span>':'');
-  return '<article class="card'+(isOpen?' open':'')+'" data-card="'+esc(p.id)+'"><div class="photo">'+
+  return '<article class="card'+(isOpen?' open':'')+(picked.has(p.id)?' picked':'')+'" data-card="'+esc(p.id)+'"><div class="photo">'+
     (p.foto?'<img loading="lazy" src="'+esc(p.foto)+'" alt="'+esc(p.nome)+'" style="'+rotStyle(p.rotacao)+'"><div class="rot"><button type="button" data-rot="-90" data-id="'+esc(p.id)+'" aria-label="Girar para a esquerda">⟲</button><button type="button" data-rot="90" data-id="'+esc(p.id)+'" aria-label="Girar para a direita">⟳</button></div>':'Sem foto')+
-    '</div><div class="body"><p class="name">'+esc(p.nome||'Peça sem nome')+'</p><div class="chips">'+chips+'</div>'+
+    '</div><div class="body">'+(tab==='conferencia'?'<label class="sel"><input type="checkbox" data-pick="'+esc(p.id)+'"'+(picked.has(p.id)?' checked':'')+'> Selecionar</label>':'')+
+    '<p class="name">'+esc(p.nome||'Peça sem nome')+'</p><div class="chips">'+chips+'</div>'+
     (p.marca?'<span class="chip" style="justify-self:start">'+esc(p.marca)+'</span>':'')+
     (p.aviso&&ativa(p)?'<p class="aviso">⚠ '+esc(p.aviso)+'</p>':'')+
     (m.length&&ativa(p)?'<p class="faltam">Falta preencher: '+m.map(x=>x[1]).join(', ')+'</p>':'')+
@@ -174,6 +208,7 @@ function render(){if(!loaded)return;renderTabs();renderCats();renderFalta();
   $('grid').classList.toggle('compact',tab==='conferencia');
   let list=lists()[tab].filter(p=>(!q||[p.nome,p.marca,p.tamanho,p.categoria,p.notes].join(' ').toLocaleLowerCase('pt-BR').includes(q))&&(!fc||p.categoria===fc)&&(!fe||p.estacao===fe)&&(!fs||p.serve===fs)&&(!ff||pendencias(p).some(x=>x[0]===ff)));
   list.sort((a,b)=>String(a.categoria).localeCompare(String(b.categoria),'pt-BR')||String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+  shown=list.map(p=>p.id);$('selAll').hidden=tab!=='conferencia';renderBulk();
   $('count').textContent=list.length+(list.length===1?' peça':' peças')+(tab==='conferencia'?' com algo a completar':tab==='baixas'?' que saíram do guarda-roupa':'');
   $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">'+(tab==='conferencia'?'Nada para conferir. Tudo completo ♡':'Nenhuma peça aqui.')+'</div>';
   $('grid').querySelectorAll('[data-card]').forEach(markMissing)}
@@ -181,15 +216,33 @@ function refreshCard(id){const el=$('grid').querySelector('[data-card="'+CSS.esc
   if(el.contains(document.activeElement)&&document.activeElement.matches('input:not([type=file]),textarea')){markMissing(el);return}
   const t=document.createElement('div');t.innerHTML=card(Object.assign({id},pecas[id]));const fresh=t.firstElementChild;el.replaceWith(fresh);markMissing(fresh)}
 
+// ---------- bulk edit (Conferência) ----------
+function fillPick(sel,k,lab,novo){const cur=sel.value;sel.innerHTML='<option value="">'+lab+': não mudar</option>'+distinct(k).map(v=>'<option'+(v===cur?' selected':'')+'>'+esc(v)+'</option>').join('')+'<option value="'+NEW+'"'+(cur===NEW?' selected':'')+'>＋ '+novo+'…</option>'}
+function renderBulk(){const on=tab==='conferencia'&&picked.size>0;$('bulk').hidden=!on;document.body.classList.toggle('has-bulk',on);if(!on)return;
+  $('bulkN').textContent=picked.size+(picked.size===1?' selecionada':' selecionadas');
+  if(!document.activeElement||!$('bulk').contains(document.activeElement)){fillPick($('bMarca'),'marca','Marca','Nova marca');fillPick($('bTam'),'tamanho','Tamanho','Novo tamanho')}}
+$('bMarca').addEventListener('change',()=>{$('bMarcaNova').hidden=$('bMarca').value!==NEW});
+$('bTam').addEventListener('change',()=>{$('bTamNovo').hidden=$('bTam').value!==NEW});
+$('selAll').addEventListener('click',()=>{shown.forEach(id=>picked.add(id));render()});
+$('bClear').addEventListener('click',()=>{picked.clear();render()});
+$('bApply').addEventListener('click',()=>{
+  const val=(s,i)=>s.value===NEW?i.value.trim():s.value,patch={marca:val($('bMarca'),$('bMarcaNova')),tamanho:val($('bTam'),$('bTamNovo')),estacao:$('bEst').value,serve:$('bServe').value},over=$('bOver').checked;
+  Object.keys(patch).forEach(k=>{if(!patch[k])delete patch[k]});if(!Object.keys(patch).length){setSave('error','Escolha o que aplicar.');return}
+  let n=0;picked.forEach(id=>{const p=pecas[id];if(!p)return;const ch={};Object.entries(patch).forEach(([k,v])=>{if(over||!String(p[k]||'').trim())ch[k]=v});if(Object.keys(ch).length){edit(id,ch,0);n++}});
+  picked.clear();['bMarca','bTam','bEst','bServe'].forEach(i=>$(i).value='');$('bMarcaNova').value='';$('bTamNovo').value='';$('bMarcaNova').hidden=$('bTamNovo').hidden=true;$('bOver').checked=false;
+  render();setSave('pending','Aplicado em '+n+(n===1?' peça':' peças')+'. Salvando…')});
+
 // ---------- events ----------
-$('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;open.clear();render();window.scrollTo({top:0})}});
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;open.clear();picked.clear();render();window.scrollTo({top:0})}});
 ['q','fCat','fEst','fServe','fFalta'].forEach(id=>$(id).addEventListener('input',render));
 $('add').addEventListener('click',()=>{const id='p-'+Date.now().toString(36);pecas[id]={nome:'',categoria:'',tamanho:'',marca:'',estacao:'',serve:'',conservacao:'boa',conjunto:'',notes:'',foto:'',rotacao:0,refotografar:false,aviso:'',situacao:'ativa',criado_em:new Date().toISOString()};
   queue(id,0);tab='catalogo';open.clear();open.add(id);$('q').value='';$('fCat').value='';$('fEst').value='';$('fServe').value='';render();
   const el=$('grid').querySelector('[data-card="'+id+'"]');if(el){el.scrollIntoView({block:'center'});el.querySelector('[data-k=nome]').focus()}});
 $('grid').addEventListener('input',e=>{const el=e.target;if(el.matches('input[data-k],textarea[data-k]')){edit(el.dataset.id,{[el.dataset.k]:el.value});markMissing(el.closest('[data-card]'))}});
 $('grid').addEventListener('change',async e=>{const el=e.target;
-  if(el.matches('select[data-k]')){edit(el.dataset.id,{[el.dataset.k]:el.value},0);refreshCard(el.dataset.id)}
+  if(el.dataset.pick){el.checked?picked.add(el.dataset.pick):picked.delete(el.dataset.pick);el.closest('[data-card]').classList.toggle('picked',el.checked);renderBulk();return}
+  if(el.matches('select[data-k]')){if(el.value===NEW){const i=el.parentElement.querySelector('[data-novo]');i.hidden=false;i.focus();return}
+    edit(el.dataset.id,{[el.dataset.k]:el.value},0);refreshCard(el.dataset.id)}
   if(el.matches('input[data-photo]')&&el.files[0]){const id=el.dataset.photo;if(!assets){setSave('error','Envio de foto indisponível aqui.');return}
     setSave('pending','Enviando foto…');try{const r=await assets.upload(el.files[0]);edit(id,{foto:r.url,foto_asset:r.id,rotacao:0,refotografar:false},0);refreshCard(id)}catch(err){setSave('error','A foto não foi enviada. Tente de novo.')}}});
 $('grid').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;

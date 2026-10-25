@@ -91,7 +91,7 @@ Objetivo principal: catalogar o guarda-roupa da Liv, podendo adicionar peças e 
 ### Estrutura combinada para compras e looks (25/10/2026)
 
 - **Cidade:** Campo Grande (MS). Calendário proposto: calor de outubro a março, meia estação em abril, maio e setembro, frio de junho a agosto (inverno curto, com frentes frias fortes).
-- **Perfil da criança:** nome, data de nascimento, sexo, cidade e medidas com data (altura/comprimento total, peso, cintura, comprimento do pé; tórax opcional). Base para prever mudança de tamanho.
+- **Perfil da criança (medidas aprovadas pela usuária em 25/10/2026):** nome, data de nascimento, sexo, cidade e medidas com data (altura/comprimento total, peso, cintura, comprimento do pé; tórax opcional). Base para prever mudança de tamanho.
 - **Ordem:** perfil → página de compras por regras (quantidade mínima, tamanho, estação; sem IA) → pesquisa de quantidades e tabelas das marcas → looks com IA (skill que olha as fotos).
 - **Opção futura (não agora): agente agendado** que confere periodicamente a previsão do tempo de Campo Grande e atualiza a lista de compras / avisa de frente fria chegando. A usuária quer, mas para depois.
 
