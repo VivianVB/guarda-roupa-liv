@@ -21,6 +21,7 @@ Contexto completo do projeto, catálogo e etapas: `PROJETO.md`.
 - Não excluir peças nem alterar correspondências sem confirmação.
 - Preservar os nomes originais das fotos em `fotos/`; miniaturas ficam em `fotos/mini/`.
 - Fotos marcadas como "Foto repetida" são descartadas no catálogo (a peça fica com uma foto só).
+- Foto com várias peças: se as peças estão separadas na foto, recortar cada uma em `fotos/<original>-N.jpg` (com miniatura); se estão sobrepostas, criar um cartão por peça (`<original>-N.jpg` na página) apontando para a mesma imagem. A foto original continua em `fotos/` e sai da revisão. Feito na 157 (5 pares de meias, recortados) e na 155 (3 babadores, mesma foto).
 - Categoria "Moletom" não existe: moletons entram como **Casaco**.
 - A **manga entra na categoria** de blusas, bodies e vestidos: "Body manga curta", "Body manga longa", "Body sem manga", e o mesmo para Blusa e Vestido. Peças cuja manga não está confirmada ficam só com "Body", "Blusa" ou "Vestido" até a usuária dizer.
 - **Estação** (calor, meia estação, frio) é um campo da peça, não categoria.
