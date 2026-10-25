@@ -25,7 +25,7 @@ Contexto completo do projeto, catálogo e etapas: `PROJETO.md`.
 - Categoria "Moletom" não existe: moletons entram como **Casaco**.
 - A **manga entra na categoria** de blusas, bodies, vestidos e pijamas: "Body manga curta", "Body manga longa", "Body sem manga", o mesmo para Blusa e Vestido, e "Pijama manga curta" / "Pijama manga longa". Peças cuja manga não está confirmada ficam só com "Body", "Blusa", "Vestido" ou "Pijama" até a usuária dizer.
 - **Estação** (calor, meia estação, frio) é um campo da peça, não categoria.
-- **Conservação** é um campo da peça com 4 opções: `nova` (nunca usada/com etiqueta), `boa` (usada, sem defeito), `desgastada` (bolinhas, desbotada, gasta), `defeito` (mancha, furo, rasgo, botão/zíper faltando; detalhe vai em Observação). Não preencher pela foto; no máximo citar o que se nota no texto da sugestão.
+- **Conservação** é um campo da peça com 4 opções: `nova` (nunca usada/com etiqueta), `boa` (usada, sem defeito), `desgastada` (bolinhas, desbotada, gasta), `defeito` (mancha, furo, rasgo, botão/zíper faltando; detalhe vai em Observação). Não preencher pela foto; no máximo citar o que se nota no texto da sugestão. **Padrão: `boa`** — a página mostra "Boa" quando o campo está vazio, e ao ler os dados um `conservacao` ausente vale `boa`.
 - **Conjuntos são separados** em peças próprias (blusa, short, calça…), ligadas pelo campo `conjunto` ("faz conjunto com…"). Ficam como peça única só os **pijamas e macacões**. O conjunto térmico também é separado (blusa térmica + calça térmica). Quando a foto não permite recortar as peças, a foto vai para a lista **Refotografar** (`fotos/<id>.refotografar` com o motivo).
 
 ## Revisão de fotos (página privada no claude.ai)
