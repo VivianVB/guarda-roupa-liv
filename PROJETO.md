@@ -77,6 +77,7 @@ As sugestões de correspondência entre fotos e peças (hipóteses, **não decis
 2. Preencher o **Perfil** (nascimento, tamanho atual) e a primeira medida.
 3. Ajustar os **mínimos** da aba Compras à rotina da família (hoje são sugestão inicial) e pesquisar quantidades de referência e tabelas das marcas.
 4. Looks com IA (skill que olha as fotos) — hoje os looks são por regra.
+5. **Decidido pela usuária (26/10/2026), a implementar:** separar **Doação/Venda** da **Lixeira**, para saber quanto há para doar e vender. Proposta a confirmar: botão "Separar para…" (Doar / Vender) que tira a peça do catálogo e leva para a aba Doação/Venda, com contagem por destino, opção de marcar como "doada/vendida" e de voltar ao guarda-roupa; a Lixeira fica só para cadastros errados.
 
 ## Etapas do projeto
 
