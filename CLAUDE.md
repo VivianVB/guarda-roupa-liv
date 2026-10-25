@@ -30,7 +30,7 @@ Contexto completo do projeto, catálogo e etapas: `PROJETO.md`.
 
 - Página: https://claude.ai/artifact/Fh6duJeKMsEYtEmQbdmdLg (fonte em `artifact/revisao-fotos.html`; republicar sempre pelo mesmo caminho).
 - Cada escolha da usuária é salva sozinha no banco da página. Ler com a ferramenta `ArtifactData` nesse link:
-  - `fotos/<arquivo>`: `url` da miniatura (asset), `candidate_match`, `candidate_id`.
+  - `fotos/<arquivo>`: `url` da miniatura (asset), `candidate_match` (texto mostrado como "Sugestão"), `candidate_id`, `sugestao` {`nome`, `categoria`, `estacao`} usada para pré-preencher "Peça nova". Cópia das sugestões em `dados/sugestoes.tsv`.
   - `catalogo/<id>`: `nome`, `categoria`, `tamanho`, `marca`.
   - `decisoes/<arquivo>`: `status` (`ja-cadastrada`, `nova`, `repetida`, `duvida`, `excluida` = não cadastrar, `a-conferir`), `match`, `nome`, `categoria`, `tamanho`, `marca`, `estacao`, `serve`, `igual_a`, `notes`, `rotacao` (graus, sentido horário).
 - Quando a usuária pedir para atualizar, ler `decisoes`, mostrar o resumo e só então aplicar no catálogo.

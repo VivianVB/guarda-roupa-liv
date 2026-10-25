@@ -118,7 +118,10 @@ window.addEventListener('beforeunload',e=>{if(anyPending()){e.preventDefault();e
 // ---------- decisions ----------
 function value(p){const d=decisions[p.id]||{};if(d.status==='ja-cadastrada'&&byId[d.match])return d.match;return others.some(o=>o[0]===d.status)?d.status:''}
 function kind(v){return !v?'pendentes':byId[v]?'vinculadas':v==='nova'?'novas':v}
-function setChoice(photo,v){const d=Object.assign({},decisions[photo]);if(!v){d.status='a-conferir';d.match=''}else if(byId[v]){d.status='ja-cadastrada';d.match=v}else{d.status=v;d.match=''}decisions[photo]=d;queue(photo,0)}
+function setChoice(photo,v){const d=Object.assign({},decisions[photo]);if(!v){d.status='a-conferir';d.match=''}else if(byId[v]){d.status='ja-cadastrada';d.match=v}else{d.status=v;d.match=''}
+  // "Peça nova" starts from the photo's suggestion; only empty fields are filled, nothing typed is overwritten
+  if(v==='nova'){const s=(photos.find(x=>x.id===photo)||{}).sugestao||{};['nome','categoria','estacao'].forEach(k=>{if(s[k]&&!String(d[k]||'').trim())d[k]=s[k]})}
+  decisions[photo]=d;queue(photo,0)}
 
 // ---------- rendering ----------
 function optionsHtml(){const cs=[...new Set(catalog.map(c=>c.categoria))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
