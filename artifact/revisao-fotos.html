@@ -128,7 +128,8 @@ function kind(v){return !v?'pendentes':byId[v]?'vinculadas':v==='nova'?'novas':v
 // A photo leaves "A conferir" only when it is excluded or its decision was confirmed
 // Answers given before the Confirm button existed have no `confirmado` field and count as confirmed
 const isConfirmed=d=>d.confirmado??true;
-function group(p){const v=value(p),d=decisions[p.id]||{};return v==='excluida'?'excluida':(v&&isConfirmed(d))?'conferidas':'pendentes'}
+// Excluded and re-shoot photos live only in their own list (and in "Todas")
+function group(p){const v=value(p),d=decisions[p.id]||{};return v==='excluida'?'excluida':reshoot(p)?'refotografar':(v&&isConfirmed(d))?'conferidas':'pendentes'}
 function reshoot(p){const d=decisions[p.id]||{};return d.refotografar??!!p.refotografar}
 function setChoice(photo,v){const d=Object.assign({},decisions[photo]);if(!v){d.status='a-conferir';d.match=''}else if(byId[v]){d.status='ja-cadastrada';d.match=v}else{d.status=v;d.match=''}
   d.confirmado=false;// a new choice needs a new confirmation
@@ -177,10 +178,10 @@ function markMissing(el){if(!el)return;const id=el.dataset.card,p=photos.find(x=
   el.querySelectorAll('[data-k]').forEach(f=>f.classList.toggle('miss',keys.has(f.dataset.k)));
   const t=el.querySelector('[data-faltam]');t.hidden=!m.length;t.textContent=m.length?'Falta preencher: '+m.map(x=>x[1]).join(', '):''}
 function counts(){const c={pendentes:0,conferidas:0,excluida:0,vinculadas:0,novas:0,repetida:0,duvida:0,refotografar:0,todas:photos.length};
-  photos.forEach(p=>{const g=group(p),k=kind(value(p));c[g]++;if(g!=='excluida'&&k!=='pendentes')c[k]++;if(reshoot(p))c.refotografar++});return c}
-function inFilter(p){if(filter==='todas')return true;if(filter==='refotografar')return reshoot(p);const g=group(p);
-  if(['pendentes','conferidas','excluida'].includes(filter))return g===filter;return g!=='excluida'&&kind(value(p))===filter}
-function renderBar(){const c=counts(),done=c.todas-c.pendentes;$('meter').style.width=(photos.length?done/photos.length*100:0)+'%';$('count').textContent=done+' de '+photos.length+' resolvidas';
+  photos.forEach(p=>{const g=group(p),k=kind(value(p));c[g]++;if(g!=='excluida'&&g!=='refotografar'&&k!=='pendentes')c[k]++});return c}
+function inFilter(p){if(filter==='todas')return true;const g=group(p);
+  if(['pendentes','conferidas','excluida','refotografar'].includes(filter))return g===filter;return g!=='excluida'&&g!=='refotografar'&&kind(value(p))===filter}
+function renderBar(){const c=counts(),done=c.conferidas+c.excluida;$('meter').style.width=(photos.length?done/photos.length*100:0)+'%';$('count').textContent=done+' de '+photos.length+' resolvidas'+(c.refotografar?' · '+c.refotografar+' para refotografar':'');
   $('chips').innerHTML=[['pendentes','A conferir'],['conferidas','Conferidas'],['todas','Todas'],['vinculadas','Vinculadas'],['novas','Peças novas'],['repetida','Repetidas'],['duvida','Dúvidas'],['refotografar','Refotografar'],['excluida','Excluídas']].map(f=>'<button type="button" class="chip" data-filter="'+f[0]+'" aria-pressed="'+(filter===f[0])+'">'+f[1]+' ('+c[f[0]]+')</button>').join('')}
 function syncMain(el){const p=photos.find(x=>x.id===el.dataset.main);if(p)el.value=value(p)}
 function render(){if(!(ready.fotos&&ready.catalogo&&ready.decisoes))return;
