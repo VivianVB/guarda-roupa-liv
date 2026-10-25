@@ -37,7 +37,7 @@ details summary{font-size:.8rem;color:var(--muted);cursor:pointer}details textar
 <script>
 (function(){
 const $=id=>document.getElementById(id), key='guardaRoupaLiv.correspondencias.v1';
-let photos=[],decisions={},filter='todas';
+let photos=[],decisions={},filter='pendentes';
 try{decisions=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch(e){}
 const catalog=[
 {id:'body-carters-rosa',name:'Body rosa com babado e borboleta',cat:'Body',size:'18 meses',brand:"Carter's"},
@@ -94,11 +94,13 @@ if(byId[v]||v==='nova'){const c=byId[v]||{};
 return '<div class="extra">'+(v==='nova'?f('nome','Nome da peça','Ex.: Calça floral branca')+sel('categoria','Categoria',[['','Escolher…']].concat(cats.map(x=>[x,x]))):'')+
 '<div class="two">'+f('tamanho','Tamanho',c.size||'Ex.: 2')+f('marca','Marca',c.brand||'Ex.: Kyly')+'</div>'+sel('serve','Serve na Liv?',fits)+'</div>'}
 if(v==='repetida')return '<div class="extra">'+sel('igual_a','Mesma peça da foto',[['','Escolher foto…']].concat(photos.filter(x=>x.photo!==p.photo).map(x=>[x.photo,x.photo])))+'</div>';return ''}
-function counts(){const c={todas:photos.length,pendentes:0,vinculadas:0,novas:0,repetida:0,duvida:0};photos.forEach(p=>c[kind(value(p))]++);return c}
+function counts(){const c={todas:photos.length,pendentes:0,vinculadas:0,novas:0,repetida:0,duvida:0};photos.forEach(p=>c[kind(value(p))]++);c.conferidas=c.todas-c.pendentes;return c}
+// "Conferidas" groups every resolved photo; the other filters match one decision kind
+const inFilter=p=>{const k=kind(value(p));return filter==='todas'||(filter==='conferidas'?k!=='pendentes':k===filter)};
 function renderChips(){const c=counts(),done=photos.length-c.pendentes;
 $('bar').style.width=(photos.length?done/photos.length*100:0)+'%';$('progressLabel').textContent=done+' de '+photos.length+' fotos resolvidas';
-$('chips').innerHTML=[['todas','Todas'],['pendentes','A conferir'],['vinculadas','Vinculadas'],['novas','Peças novas'],['repetida','Repetidas'],['duvida','Dúvidas']].map(f=>'<button class="chip" data-filter="'+f[0]+'" aria-pressed="'+(filter===f[0])+'">'+f[1]+' ('+c[f[0]]+')</button>').join('')}
-function render(){const list=photos.filter(p=>filter==='todas'||kind(value(p))===filter);
+$('chips').innerHTML=[['pendentes','A conferir'],['conferidas','Conferidas'],['todas','Todas'],['vinculadas','Vinculadas'],['novas','Peças novas'],['repetida','Repetidas'],['duvida','Dúvidas']].map(f=>'<button class="chip" data-filter="'+f[0]+'" aria-pressed="'+(filter===f[0])+'">'+f[1]+' ('+c[f[0]]+')</button>').join('')}
+function render(){const list=photos.filter(inFilter);
 $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">Nenhuma foto neste filtro.</div>';
 $('grid').querySelectorAll('select[data-photo]').forEach(s=>{const p=photos.find(x=>x.photo===s.dataset.photo);s.value=value(p)});renderChips()}
 function refreshCard(photo){const p=photos.find(x=>x.photo===photo),el=$('grid').querySelector('.card[data-photo="'+CSS.escape(photo)+'"]');if(!el)return;
