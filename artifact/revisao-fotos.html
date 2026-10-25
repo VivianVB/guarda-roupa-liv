@@ -64,6 +64,17 @@ label.f:has(.miss){color:var(--warn)}
 .row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 auto}
 .danger.armed{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .empty{grid-column:1/-1;text-align:center;border:1px dashed var(--line);border-radius:14px;padding:32px 16px;color:var(--muted)}
+/* Category picker: groups of checkboxes, opens below the toolbar */
+.catpick{flex:1 1 180px;position:relative}
+.catpick summary{list-style:none;cursor:pointer;border:1px solid var(--line);border-radius:9px;padding:9px;background:var(--surface);font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.catpick summary::-webkit-details-marker{display:none}
+.catpick[open] summary{border-color:var(--accent)}
+.catpanel{position:absolute;z-index:6;top:calc(100% + 6px);left:0;width:min(560px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgb(0 0 0 / .15);padding:12px;display:grid;gap:10px}
+.cgroup{display:grid;gap:4px}
+.cgroup>label{font-weight:700}
+.cgroup .items{display:flex;flex-wrap:wrap;gap:4px 12px;padding-left:26px}
+.catpanel label{display:flex;align-items:center;gap:6px;font-size:.88rem;cursor:pointer}
+.catpanel input{width:18px;height:18px;accent-color:var(--accent)}
 /* Bulk edit: selection boxes and a bar fixed to the bottom edge */
 .sel{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:700;color:var(--muted)}
 .sel input{width:20px;height:20px;accent-color:var(--accent)}
@@ -95,7 +106,7 @@ body.has-bulk main{padding-bottom:150px}
   <div class="tabs" role="tablist" id="tabs"></div>
   <div class="tools" id="tools">
     <input id="q" type="search" placeholder="Buscar peça, marca, tamanho…" aria-label="Buscar">
-    <select id="fCat" aria-label="Categoria"></select>
+    <details class="catpick" id="catPick"><summary id="catSum">Categorias: todas</summary><div class="catpanel" id="catPanel"></div></details>
     <select id="fEst" aria-label="Estação"><option value="">Todas as estações</option><option value="calor">Calor</option><option value="meia">Meia estação</option><option value="frio">Frio</option></select>
     <select id="fServe" aria-label="Serve"><option value="">Serve: todas</option><option value="sim">Serve</option><option value="grande">Ainda grande</option><option value="pequena">Já ficou pequena</option></select>
     <select id="fFalta" aria-label="O que falta" hidden></select>
@@ -125,7 +136,6 @@ const cats=['Acessório','Blusa manga curta','Blusa manga longa','Blusa sem mang
 const seasons=[['','—'],['calor','Calor'],['meia','Meia estação'],['frio','Frio']];
 const fits=[['','—'],['sim','Serve'],['grande','Ainda grande'],['pequena','Já ficou pequena']];
 const conds=[['nova','Nova'],['boa','Boa'],['desgastada','Desgastada'],['defeito','Com defeito']];
-const motivos=[['doada','Doada'],['vendida','Vendida'],['passada','Passada adiante'],['descartada','Descartada'],['duplicada','Cadastro duplicado']];
 const label=(list,v)=>(list.find(x=>x[0]===v)||[,v||''])[1];
 const needsSleeve=c=>['Body','Blusa','Vestido','Pijama'].includes(c);
 
@@ -146,13 +156,14 @@ window.addEventListener('beforeunload',e=>{if(anyPending()){e.preventDefault();e
 function missing(p){const m=[],e=k=>!String(p[k]||'').trim();
   if(e('nome'))m.push(['nome','nome']);if(e('categoria'))m.push(['categoria','categoria']);else if(needsSleeve(p.categoria))m.push(['categoria','manga na categoria']);
   if(e('tamanho'))m.push(['tamanho','tamanho']);if(e('marca'))m.push(['marca','marca']);if(e('estacao'))m.push(['estacao','estação']);if(e('serve'))m.push(['serve','serve?']);return m}
-const ativa=p=>p.situacao!=='baixa';
+// Deleted pieces go to the trash (situacao "excluida"; older "baixa" counts the same) and can be restored
+const ativa=p=>p.situacao!=='excluida'&&p.situacao!=='baixa';
 // Everything that keeps a piece in Conferência, as [key,label] — used by the "O que falta" filter
 function pendencias(p){const r=missing(p).map(x=>x[1]==='manga na categoria'?['manga','Manga na categoria']:[x[0],x[1][0].toUpperCase()+x[1].slice(1)]);
   if(p.aviso)r.push(['aviso','Aviso']);if(!p.foto)r.push(['semfoto','Sem foto']);if(p.refotografar)r.push(['refotografar','Refotografar']);return r}
 function precisaConferir(p){return ativa(p)&&(missing(p).length||p.aviso||p.refotografar||!p.foto)}
 function lists(){const all=Object.entries(pecas).map(([id,p])=>Object.assign({id},p));
-  return{catalogo:all.filter(ativa),conferencia:all.filter(precisaConferir),baixas:all.filter(p=>!ativa(p))}}
+  return{catalogo:all.filter(ativa),conferencia:all.filter(precisaConferir),lixeira:all.filter(p=>!ativa(p))}}
 
 // ---------- rendering ----------
 function rotStyle(r){r=((r||0)%360+360)%360;return 'transform:rotate('+r+'deg)'}
@@ -176,14 +187,14 @@ function editor(p){return '<div class="editor">'+field(p,'nome','Nome')+pick(p,'
   '<div class="row"><label class="btn" style="text-align:center">📷 '+(p.foto?'Trocar foto':'Adicionar foto')+'<input type="file" accept="image/*" data-photo="'+esc(p.id)+'" hidden></label>'+
   '<button type="button" class="btn" data-reshoot="'+esc(p.id)+'">'+(p.refotografar?'Já refotografei':'Pôr para refotografar')+'</button>'+
   (p.aviso?'<button type="button" class="btn" data-clearaviso="'+esc(p.id)+'">Resolvi o aviso</button>':'')+'</div>'+
-  (ativa(p)?'<div class="row"><select data-motivo="'+esc(p.id)+'" aria-label="Motivo da baixa">'+motivos.map(m=>'<option value="'+m[0]+'">'+m[1]+'</option>').join('')+'</select><button type="button" class="btn danger" data-baixa="'+esc(p.id)+'">Dar baixa</button></div>'
-    :'<button type="button" class="btn" data-reativar="'+esc(p.id)+'">Voltar para o guarda-roupa</button>')+'</div>'}
+  (ativa(p)?'<button type="button" class="btn danger" data-excluir="'+esc(p.id)+'">🗑 Excluir</button>'
+    :'<div class="row"><button type="button" class="btn" data-restaurar="'+esc(p.id)+'">Restaurar</button><button type="button" class="btn danger" data-apagar="'+esc(p.id)+'">Apagar de vez</button></div>')+'</div>'}
 function card(p){const m=missing(p),isOpen=open.has(p.id)||tab==='conferencia';
   const chips=[p.categoria,p.tamanho,label(seasons,p.estacao)].filter(Boolean).map(t=>'<span class="chip">'+esc(t)+'</span>').join('')+
     (p.serve?'<span class="chip '+(p.serve==='sim'?'ok':'warn')+'">'+esc(label(fits,p.serve))+'</span>':'')+
     (p.conservacao&&p.conservacao!=='boa'?'<span class="chip '+(p.conservacao==='nova'?'ok':'alert')+'">'+esc(label(conds,p.conservacao))+'</span>':'')+
     (p.refotografar?'<span class="chip alert">📷 Refotografar</span>':'')+
-    (!ativa(p)?'<span class="chip">Baixa: '+esc(label(motivos,p.baixa_motivo))+(p.baixa_data?' · '+esc(p.baixa_data):'')+'</span>':'');
+    (!ativa(p)?'<span class="chip">Na lixeira'+(p.excluida_em||p.baixa_data?' desde '+esc(p.excluida_em||p.baixa_data):'')+'</span>':'');
   return '<article class="card'+(isOpen?' open':'')+(picked.has(p.id)?' picked':'')+'" data-card="'+esc(p.id)+'"><div class="photo">'+
     (p.foto?'<img loading="lazy" src="'+esc(p.foto)+'" alt="'+esc(p.nome)+'" style="'+rotStyle(p.rotacao)+'"><div class="rot"><button type="button" data-rot="-90" data-id="'+esc(p.id)+'" aria-label="Girar para a esquerda">⟲</button><button type="button" data-rot="90" data-id="'+esc(p.id)+'" aria-label="Girar para a direita">⟳</button></div>':'Sem foto')+
     '</div><div class="body">'+(tab==='conferencia'?'<label class="sel"><input type="checkbox" data-pick="'+esc(p.id)+'"'+(picked.has(p.id)?' checked':'')+'> Selecionar</label>':'')+
@@ -196,20 +207,37 @@ function card(p){const m=missing(p),isOpen=open.has(p.id)||tab==='conferencia';
 function markMissing(el){if(!el)return;const p=Object.assign({id:el.dataset.card},pecas[el.dataset.card]);const keys=new Set(missing(p).map(x=>x[0]));
   el.querySelectorAll('[data-k]').forEach(f=>f.classList.toggle('miss',keys.has(f.dataset.k)));
   const t=el.querySelector('.faltam');const m=missing(p);if(t){t.textContent=m.length?'Falta preencher: '+m.map(x=>x[1]).join(', '):'Tudo preenchido ✓'}}
-function renderTabs(){const l=lists();$('tabs').innerHTML=[['catalogo','Catálogo',l.catalogo.length],['conferencia','Conferência',l.conferencia.length],['baixas','Baixas',l.baixas.length]]
+function renderTabs(){const l=lists();$('tabs').innerHTML=[['catalogo','Catálogo',l.catalogo.length],['conferencia','Conferência',l.conferencia.length],['lixeira','Lixeira',l.lixeira.length]]
   .map(t=>'<button type="button" role="tab" class="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+' ('+t[2]+')</button>').join('')}
-function renderCats(){const cur=$('fCat').value,used=[...new Set(Object.values(pecas).map(p=>p.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-  $('fCat').innerHTML='<option value="">Todas as categorias</option>'+used.map(c=>'<option'+(c===cur?' selected':'')+'>'+esc(c)+'</option>').join('')}
+// Category groups used by the multi-select filter; categories are matched by their first word
+const groups=[['cima','Partes de cima',['Blusa','Body']],['baixo','Partes de baixo',['Calça','Short','Saia']],['unica','Peças únicas',['Vestido','Jardineira','Macacão']],
+  ['pijama','Pijamas',['Pijama']],['agasalho','Agasalhos',['Casaco','Colete','Poncho']],['acessorio','Acessórios',['Meias','Chapéu','Calçado','Acessório']]];
+const groupOf=c=>{const w=String(c).split(' ')[0];const g=groups.find(g=>g[2].includes(w));return g?g[0]:'outros'};
+let catSel=new Set();
+function renderCats(){const used=[...new Set(Object.values(pecas).filter(ativa).map(p=>p.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const gs=groups.concat([['outros','Outros',[]]]).map(([k,l])=>[k,l,used.filter(c=>groupOf(c)===k)]).filter(g=>g[2].length);
+  $('catPanel').innerHTML=gs.map(([k,l,cs])=>{const all=cs.every(c=>catSel.has(c)),some=cs.some(c=>catSel.has(c));
+    return '<div class="cgroup"><label><input type="checkbox" data-group="'+k+'"'+(all?' checked':'')+(some&&!all?' data-some="1"':'')+'> '+esc(l)+'</label><div class="items">'+
+      cs.map(c=>'<label><input type="checkbox" data-cat="'+esc(c)+'"'+(catSel.has(c)?' checked':'')+'> '+esc(c)+'</label>').join('')+'</div></div>'}).join('')+
+    (catSel.size?'<button type="button" class="btn" id="catClear">Limpar categorias</button>':'');
+  $('catPanel').querySelectorAll('[data-some]').forEach(i=>i.indeterminate=true);
+  $('catSum').textContent=!catSel.size?'Categorias: todas':catSel.size===1?[...catSel][0]:catSel.size+' categorias'}
+$('catPanel').addEventListener('change',e=>{const i=e.target;
+  if(i.dataset.cat){i.checked?catSel.add(i.dataset.cat):catSel.delete(i.dataset.cat)}
+  if(i.dataset.group){i.closest('.cgroup').querySelectorAll('[data-cat]').forEach(c=>{i.checked?catSel.add(c.dataset.cat):catSel.delete(c.dataset.cat)})}
+  render()});
+$('catPanel').addEventListener('click',e=>{if(e.target.id==='catClear'){catSel.clear();render()}});
+document.addEventListener('click',e=>{if(!$('catPick').contains(e.target))$('catPick').open=false});
 function renderFalta(){const conf=tab==='conferencia';$('fFalta').hidden=!conf;if(!conf)return;const cur=$('fFalta').value,n={};
   lists().conferencia.forEach(p=>pendencias(p).forEach(([k,l])=>{n[k]=n[k]||[l,0];n[k][1]++}));
   $('fFalta').innerHTML='<option value="">Falta: tudo</option>'+Object.entries(n).sort((a,b)=>b[1][1]-a[1][1]).map(([k,[l,c]])=>'<option value="'+k+'"'+(k===cur?' selected':'')+'>Falta: '+esc(l)+' ('+c+')</option>').join('')}
 function render(){if(!loaded)return;renderTabs();renderCats();renderFalta();
-  const q=$('q').value.trim().toLocaleLowerCase('pt-BR'),fc=$('fCat').value,fe=$('fEst').value,fs=$('fServe').value,ff=tab==='conferencia'?$('fFalta').value:'';
+  const q=$('q').value.trim().toLocaleLowerCase('pt-BR'),fe=$('fEst').value,fs=$('fServe').value,ff=tab==='conferencia'?$('fFalta').value:'';
   $('grid').classList.toggle('compact',tab==='conferencia');
-  let list=lists()[tab].filter(p=>(!q||[p.nome,p.marca,p.tamanho,p.categoria,p.notes].join(' ').toLocaleLowerCase('pt-BR').includes(q))&&(!fc||p.categoria===fc)&&(!fe||p.estacao===fe)&&(!fs||p.serve===fs)&&(!ff||pendencias(p).some(x=>x[0]===ff)));
+  let list=lists()[tab].filter(p=>(!q||[p.nome,p.marca,p.tamanho,p.categoria,p.notes].join(' ').toLocaleLowerCase('pt-BR').includes(q))&&(!catSel.size||catSel.has(p.categoria))&&(!fe||p.estacao===fe)&&(!fs||p.serve===fs)&&(!ff||pendencias(p).some(x=>x[0]===ff)));
   list.sort((a,b)=>String(a.categoria).localeCompare(String(b.categoria),'pt-BR')||String(a.nome).localeCompare(String(b.nome),'pt-BR'));
   shown=list.map(p=>p.id);$('selAll').hidden=tab!=='conferencia';renderBulk();
-  $('count').textContent=list.length+(list.length===1?' peça':' peças')+(tab==='conferencia'?' com algo a completar':tab==='baixas'?' que saíram do guarda-roupa':'');
+  $('count').textContent=list.length+(list.length===1?' peça':' peças')+(tab==='conferencia'?' com algo a completar':tab==='lixeira'?' na lixeira':'');
   $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">'+(tab==='conferencia'?'Nada para conferir. Tudo completo ♡':'Nenhuma peça aqui.')+'</div>';
   $('grid').querySelectorAll('[data-card]').forEach(markMissing)}
 function refreshCard(id){const el=$('grid').querySelector('[data-card="'+CSS.escape(id)+'"]');renderTabs();if(!el)return;
@@ -234,9 +262,9 @@ $('bApply').addEventListener('click',()=>{
 
 // ---------- events ----------
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;open.clear();picked.clear();render();window.scrollTo({top:0})}});
-['q','fCat','fEst','fServe','fFalta'].forEach(id=>$(id).addEventListener('input',render));
+['q','fEst','fServe','fFalta'].forEach(id=>$(id).addEventListener('input',render));
 $('add').addEventListener('click',()=>{const id='p-'+Date.now().toString(36);pecas[id]={nome:'',categoria:'',tamanho:'',marca:'',estacao:'',serve:'',conservacao:'boa',conjunto:'',notes:'',foto:'',rotacao:0,refotografar:false,aviso:'',situacao:'ativa',criado_em:new Date().toISOString()};
-  queue(id,0);tab='catalogo';open.clear();open.add(id);$('q').value='';$('fCat').value='';$('fEst').value='';$('fServe').value='';render();
+  queue(id,0);tab='catalogo';open.clear();open.add(id);$('q').value='';catSel.clear();$('fEst').value='';$('fServe').value='';render();
   const el=$('grid').querySelector('[data-card="'+id+'"]');if(el){el.scrollIntoView({block:'center'});el.querySelector('[data-k=nome]').focus()}});
 $('grid').addEventListener('input',e=>{const el=e.target;if(el.matches('input[data-k],textarea[data-k]')){edit(el.dataset.id,{[el.dataset.k]:el.value});markMissing(el.closest('[data-card]'))}});
 $('grid').addEventListener('change',async e=>{const el=e.target;
@@ -250,9 +278,12 @@ $('grid').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)
   if(d.rot){const p=pecas[d.id];const r=(((p.rotacao||0)+Number(d.rot))%360+360)%360;edit(d.id,{rotacao:r},400);t.closest('.photo').querySelector('img').setAttribute('style',rotStyle(r))}
   if(d.reshoot){edit(d.reshoot,{refotografar:!pecas[d.reshoot].refotografar},0);refreshCard(d.reshoot)}
   if(d.clearaviso){edit(d.clearaviso,{aviso:''},0);refreshCard(d.clearaviso)}
-  if(d.baixa){if(!t.classList.contains('armed')){t.classList.add('armed');t.textContent='Toque de novo para confirmar';setTimeout(()=>{if(t.isConnected){t.classList.remove('armed');t.textContent='Dar baixa'}},3500);return}
-    const motivo=t.closest('.row').querySelector('[data-motivo]').value;edit(d.baixa,{situacao:'baixa',baixa_motivo:motivo,baixa_data:new Date().toLocaleDateString('pt-BR')},0);open.delete(d.baixa);refreshCard(d.baixa)}
-  if(d.reativar){edit(d.reativar,{situacao:'ativa',baixa_motivo:'',baixa_data:''},0);refreshCard(d.reativar)}});
+  // Destructive buttons ask for a second tap
+  const arm=()=>{if(t.classList.contains('armed'))return false;const txt=t.textContent;t.classList.add('armed');t.textContent='Toque de novo para confirmar';
+    setTimeout(()=>{if(t.isConnected){t.classList.remove('armed');t.textContent=txt}},3500);return true};
+  if(d.excluir){if(arm())return;edit(d.excluir,{situacao:'excluida',excluida_em:new Date().toLocaleDateString('pt-BR')},0);open.delete(d.excluir);refreshCard(d.excluir)}
+  if(d.restaurar){edit(d.restaurar,{situacao:'ativa',excluida_em:'',baixa_motivo:'',baixa_data:''},0);refreshCard(d.restaurar)}
+  if(d.apagar){if(arm())return;const id=d.apagar;delete pecas[id];db.collection('pecas').doc(id).delete().catch(()=>setSave('error','Não foi possível apagar. Tente de novo.'));t.closest('[data-card]').remove();renderTabs()}});
 
 // ---------- data ----------
 (async function start(){
