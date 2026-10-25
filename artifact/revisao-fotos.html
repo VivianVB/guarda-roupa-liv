@@ -46,7 +46,10 @@ main{padding-block:14px 48px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
 .card.open{grid-column:span 2}
 .photo{position:relative;aspect-ratio:1/1;max-width:100%;background:var(--sunk);overflow:hidden;display:grid;place-items:center;color:var(--muted);font-size:.85rem}
-.photo img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .2s}
+/* Photos are pinned to their square box so portrait ones fit whole too (they used to overflow and get cut) */
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;transition:transform .2s}
+.look .pics div,.mini div,.cjthumb div,.sheet .list button div{position:relative}
+.look .pics img,.mini img,.cjthumb img,.sheet .list img{position:absolute;inset:0}
 .rot{position:absolute;bottom:8px;right:8px;display:flex;gap:6px}
 .rot button{width:36px;height:36px;border-radius:50%;border:0;background:color-mix(in srgb,var(--surface) 88%,transparent);font-size:1.1rem;box-shadow:0 1px 4px rgb(0 0 0 / .18)}
 .body{padding:12px;display:grid;gap:8px}
@@ -106,6 +109,20 @@ body.has-bulk main{padding-bottom:150px}
 .mini{display:grid;gap:4px;font-size:.78rem;line-height:1.25}
 .mini div{aspect-ratio:1/1;background:var(--sunk);border-radius:10px;overflow:hidden}.mini img{width:100%;height:100%;object-fit:contain}
 .mini small{color:var(--muted)}
+/* Sets: linked-piece thumbnails and the bottom-sheet picker */
+.cj{display:grid;gap:6px}
+.cjrow{display:flex;gap:6px;flex-wrap:wrap}
+.cjthumb{width:64px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0;overflow:hidden;position:relative}
+.cjthumb div{aspect-ratio:1/1;background:var(--sunk)}.cjthumb img{width:100%;height:100%;object-fit:contain}
+.linkish{border:0;background:none;padding:0;font-size:.75rem;color:var(--muted);text-decoration:underline;text-align:left}
+.sheet{position:fixed;inset:0;z-index:20;background:rgb(0 0 0 / .35);display:flex;align-items:flex-end;justify-content:center}
+.sheet .in{background:var(--surface);width:min(900px,100%);max-height:80vh;border-radius:16px 16px 0 0;display:grid;grid-template-rows:auto 1fr;
+  padding:14px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet .head{display:flex;gap:8px;align-items:center;margin-bottom:10px}.sheet .head input{flex:1}
+.sheet .list{overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;align-content:start}
+.sheet .list button{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0;text-align:left;font-size:.75rem;overflow:hidden}
+.sheet .list button div{aspect-ratio:1/1;background:var(--sunk)}.sheet .list button img{width:100%;height:100%;object-fit:contain}
+.sheet .list button span{display:block;padding:4px 6px}
 .scroll{overflow-x:auto}
 .looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .look{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:grid}
@@ -126,6 +143,7 @@ body.has-bulk main{padding-bottom:150px}
     <input id="q" type="search" placeholder="Buscar peça, marca, tamanho…" aria-label="Buscar">
     <select id="fEst" aria-label="Estação"><option value="">Todas as estações</option><option value="calor">Calor</option><option value="meia">Meia estação</option><option value="frio">Frio</option></select>
     <select id="fServe" aria-label="Serve"><option value="">Serve: todas</option><option value="sim">Serve</option><option value="grande">Ainda grande</option><option value="pequena">Já ficou pequena</option></select>
+    <select id="fCor" aria-label="Cor"></select>
     <select id="fFalta" aria-label="O que falta" hidden></select>
     <button class="btn" id="clearF" type="button" hidden>✕ Limpar filtros</button>
     <button class="btn" id="selAll" type="button" hidden>Selecionar todas deste filtro</button>
@@ -155,6 +173,12 @@ let db=null,assets=null,pecas={},tab='catalogo',open=new Set(),picked=new Set(),
 const cats=['Acessório','Blusa manga curta','Blusa manga longa','Blusa sem manga','Body manga curta','Body manga longa','Body sem manga','Calça','Calçado','Casaco','Chapéu','Colete','Jardineira','Macacão','Meias','Pijama manga curta','Pijama manga longa','Poncho','Saia','Short','Vestido manga curta','Vestido manga longa','Vestido sem manga'];
 const seasons=[['','—'],['calor','Calor'],['meia','Meia estação'],['frio','Frio']];
 const fits=[['','—'],['sim','Serve'],['grande','Ainda grande'],['pequena','Já ficou pequena']];
+// Main colour: chosen by the user, or guessed from the piece name until then
+const cores=['Amarelo','Azul','Bege','Branco','Cinza','Colorido','Laranja','Lilás','Marrom','Preto','Rosa','Verde','Vermelho','Vinho'];
+const corRules=[[/azu[li]|jeans|marinho/,'Azul'],[/rosa|pink/,'Rosa'],[/branc|off-white/,'Branco'],[/pret/,'Preto'],[/cinza/,'Cinza'],[/verde/,'Verde'],[/amarel|mostarda/,'Amarelo'],
+  [/vermelh/,'Vermelho'],[/lil[aá]s|roxo|roxinho/,'Lilás'],[/bege/,'Bege'],[/vinho/,'Vinho'],[/marrom/,'Marrom'],[/laranja/,'Laranja'],[/colorid/,'Colorido']];
+function corDe(p){if(p.cor)return p.cor;const n=String(p.nome||'').toLocaleLowerCase('pt-BR');let best=null;
+  corRules.forEach(([re,c])=>{const m=n.match(re);if(m&&(!best||m.index<best[0]))best=[m.index,c]});return best?best[1]:''}
 const conds=[['nova','Nova'],['boa','Boa'],['desgastada','Desgastada'],['defeito','Com defeito']];
 const label=(list,v)=>(list.find(x=>x[0]===v)||[,v||''])[1];
 const needsSleeve=c=>['Body','Blusa','Vestido','Pijama'].includes(c);
@@ -199,10 +223,44 @@ function sizeRank(s){s=s.toUpperCase();const fixed={RN:0,P:1,M:2,G:3,GG:4,U:9999
 function listPick(p,k,lab,novo){const cur=String(p[k]||'').trim(),vals=distinct(k);
   return '<label class="f">'+lab+'<select data-k="'+k+'" data-id="'+esc(p.id)+'"><option value="">Escolher…</option>'+vals.map(v=>'<option'+(v===cur?' selected':'')+'>'+esc(v)+'</option>').join('')+'<option value="'+NEW+'">＋ '+novo+'…</option></select>'+
   '<input data-k="'+k+'" data-id="'+esc(p.id)+'" data-novo hidden placeholder="'+esc(novo)+'"></label>'}
+// ---------- sets (collection "conjuntos": {nome, pecas:[ids]}) ----------
+let conjuntos={};
+function setOf(id){const e=Object.entries(conjuntos).find(([,c])=>(c.pecas||[]).includes(id));return e||null}
+function thumb(id,extra){const p=pecas[id];if(!p)return '';return '<button type="button" class="cjthumb" data-goto="'+esc(id)+'" title="'+esc(p.nome)+'"><div>'+(p.foto?'<img loading="lazy" src="'+esc(p.foto)+'" alt="'+esc(p.nome)+'" style="'+rotStyle(p.rotacao)+'">':'')+'</div>'+(extra||'')+'</button>'}
+function conjSection(p){const s=setOf(p.id);if(!s)return '<button type="button" class="btn" data-link="'+esc(p.id)+'">＋ Vincular a um conjunto</button>';
+  const[cid,c]=s;return '<div class="cj"><label class="f">Conjunto: '+esc(c.nome||'sem nome')+'</label><div class="cjrow">'+(c.pecas||[]).filter(x=>x!==p.id).map(x=>thumb(x)).join('')+'</div>'+
+    '<div class="row"><button type="button" class="btn" data-link="'+esc(p.id)+'">＋ Outra peça</button><button type="button" class="btn" data-leave="'+esc(p.id)+'">Tirar deste conjunto</button></div></div>'}
+function saveSet(cid,c){conjuntos[cid]=c;saveDoc('conjuntos',cid,c,0)}
+function dropSet(cid){delete conjuntos[cid];db.collection('conjuntos').doc(cid).delete()}
+// Linking two pieces joins their sets (or creates one)
+function link(a,b){const A=setOf(a),B=setOf(b);
+  if(A&&B){if(A[0]===B[0])return;saveSet(A[0],Object.assign({},A[1],{pecas:[...new Set([...A[1].pecas,...B[1].pecas])]}));dropSet(B[0])}
+  else if(A)saveSet(A[0],Object.assign({},A[1],{pecas:[...A[1].pecas,b]}));
+  else if(B)saveSet(B[0],Object.assign({},B[1],{pecas:[...B[1].pecas,a]}));
+  else saveSet('c-'+Date.now().toString(36),{nome:'Conjunto '+(pecas[a].nome||''),pecas:[a,b]})}
+function leave(id){const s=setOf(id);if(!s)return;const rest=s[1].pecas.filter(x=>x!==id);rest.length<2?dropSet(s[0]):saveSet(s[0],Object.assign({},s[1],{pecas:rest}))}
+// Bottom sheet listing the active pieces with photos; onPick(id) runs on tap
+function openPicker(title,exclude,onPick){const el=document.createElement('div');el.className='sheet';
+  el.innerHTML='<div class="in" role="dialog" aria-label="'+esc(title)+'"><div class="head"><b>'+esc(title)+'</b><input type="search" placeholder="Buscar peça…" aria-label="Buscar peça"><button type="button" class="btn" data-close>Fechar</button></div><div class="list"></div></div>';
+  const list=el.querySelector('.list'),q=el.querySelector('input');
+  const draw=()=>{const t=q.value.trim().toLocaleLowerCase('pt-BR');list.innerHTML=Object.entries(pecas).filter(([id,p])=>ativa(p)&&!exclude.includes(id)&&(!t||[p.nome,p.categoria,p.marca].join(' ').toLocaleLowerCase('pt-BR').includes(t)))
+    .sort((a,b)=>String(a[1].categoria).localeCompare(String(b[1].categoria),'pt-BR')).map(([id,p])=>'<button type="button" data-pick="'+esc(id)+'"><div>'+(p.foto?'<img loading="lazy" src="'+esc(p.foto)+'" alt="" style="'+rotStyle(p.rotacao)+'">':'')+'</div><span>'+esc(p.nome)+'</span></button>').join('')};
+  draw();q.addEventListener('input',draw);
+  el.addEventListener('click',e=>{if(e.target===el||e.target.closest('[data-close]')){el.remove();return}const b=e.target.closest('[data-pick]');if(b){el.remove();onPick(b.dataset.pick)}});
+  document.body.appendChild(el);q.focus()}
+function goTo(id){tab='catalogo';$('q').value='';$('fEst').value='';$('fServe').value='';grpSel.clear();catOff.clear();open.clear();open.add(id);render();
+  const el=$('grid').querySelector('[data-card="'+CSS.escape(id)+'"]');if(el)el.scrollIntoView({block:'center'})}
+function renderConjuntos(){if(typing())return;const sets=Object.entries(conjuntos).sort((a,b)=>String(a[1].nome).localeCompare(String(b[1].nome),'pt-BR'));
+  $('view').innerHTML='<div class="panel"><h2>Conjuntos ('+sets.length+')</h2><p class="hint">Peças que fazem conjunto. Para criar, toque em "＋ Novo conjunto" ou abra uma peça e use "Vincular a um conjunto".</p>'+
+    '<button type="button" class="btn primary" id="newSet" style="justify-self:start">＋ Novo conjunto</button></div>'+
+    sets.map(([cid,c])=>'<div class="panel"><label class="f">Nome<input data-cjname="'+esc(cid)+'" value="'+esc(c.nome)+'"></label><div class="cjrow">'+
+      (c.pecas||[]).map(id=>pecas[id]?'<div style="display:grid;gap:4px;width:96px;font-size:.75rem">'+thumb(id).replace('class="cjthumb"','class="cjthumb" style="width:96px"')+'<span>'+esc(pecas[id].nome)+(ativa(pecas[id])?'':' (na lixeira)')+'</span>'+
+        '<button type="button" class="linkish" data-cjremove="'+esc(cid+'|'+id)+'">Tirar do conjunto</button></div>':'').join('')+'</div>'+
+      '<div class="row"><button type="button" class="btn" data-cjadd="'+esc(cid)+'">＋ Adicionar peça</button><button type="button" class="btn danger" data-cjdel="'+esc(cid)+'">Desfazer conjunto</button></div></div>').join('')}
 function editor(p){return '<div class="editor">'+field(p,'nome','Nome')+pick(p,'categoria','Categoria',[['','Escolher…']].concat(cats.map(c=>[c,c])))+
   '<div class="two">'+listPick(p,'tamanho','Tamanho','Novo tamanho')+listPick(p,'marca','Marca','Nova marca')+'</div>'+
   '<div class="two">'+pick(p,'estacao','Estação',seasons)+pick(p,'serve','Serve na Liv?',fits)+'</div>'+
-  pick(p,'conservacao','Conservação',conds)+field(p,'conjunto','Faz conjunto com (opcional)')+
+  '<div class="two">'+pick(Object.assign({},p,{cor:corDe(p)}),'cor','Cor principal',[['','—']].concat(cores.map(c=>[c,c])))+pick(p,'conservacao','Conservação',conds)+'</div>'+conjSection(p)+
   '<label class="f">Observação<textarea rows="2" data-k="notes" data-id="'+esc(p.id)+'">'+esc(p.notes)+'</textarea></label>'+
   '<div class="row"><label class="btn" style="text-align:center">📷 '+(p.foto?'Trocar foto':'Adicionar foto')+'<input type="file" accept="image/*" data-photo="'+esc(p.id)+'" hidden></label>'+
   '<button type="button" class="btn" data-reshoot="'+esc(p.id)+'">'+(p.refotografar?'Já refotografei':'Pôr para refotografar')+'</button>'+
@@ -211,10 +269,10 @@ function editor(p){return '<div class="editor">'+field(p,'nome','Nome')+pick(p,'
   (ativa(p)?'<button type="button" class="btn danger" data-excluir="'+esc(p.id)+'">🗑 Excluir</button>'
     :'<div class="row"><button type="button" class="btn" data-restaurar="'+esc(p.id)+'">Restaurar</button><button type="button" class="btn danger" data-apagar="'+esc(p.id)+'">Apagar de vez</button></div>')+'</div>'}
 function card(p){const m=missing(p),isOpen=open.has(p.id);
-  const chips=[p.categoria,p.tamanho,label(seasons,p.estacao)].filter(Boolean).map(t=>'<span class="chip">'+esc(t)+'</span>').join('')+
+  const chips=[p.categoria,p.tamanho,label(seasons,p.estacao),corDe(p)].filter(Boolean).map(t=>'<span class="chip">'+esc(t)+'</span>').join('')+
     (p.serve?'<span class="chip '+(p.serve==='sim'?'ok':'warn')+'">'+esc(label(fits,p.serve))+'</span>':'')+
     (p.conservacao&&p.conservacao!=='boa'?'<span class="chip '+(p.conservacao==='nova'?'ok':'alert')+'">'+esc(label(conds,p.conservacao))+'</span>':'')+
-    (p.refotografar?'<span class="chip alert">📷 Refotografar</span>':'')+
+    (p.refotografar?'<span class="chip alert">📷 Refotografar</span>':'')+(setOf(p.id)?'<span class="chip ok">Conjunto</span>':'')+
     (!ativa(p)?'<span class="chip">Na lixeira'+(p.excluida_em||p.baixa_data?' desde '+esc(p.excluida_em||p.baixa_data):'')+'</span>':'');
   return '<article class="card'+(isOpen?' open':'')+(picked.has(p.id)?' picked':'')+'" data-card="'+esc(p.id)+'"><div class="photo">'+
     (p.foto?'<img loading="lazy" src="'+esc(p.foto)+'" alt="'+esc(p.nome)+'" style="'+rotStyle(p.rotacao)+'"><div class="rot"><button type="button" data-rot="-90" data-id="'+esc(p.id)+'" aria-label="Girar para a esquerda">⟲</button><button type="button" data-rot="90" data-id="'+esc(p.id)+'" aria-label="Girar para a direita">⟳</button></div>':'Sem foto')+
@@ -228,9 +286,9 @@ function card(p){const m=missing(p),isOpen=open.has(p.id);
 function markMissing(el){if(!el)return;const p=Object.assign({id:el.dataset.card},pecas[el.dataset.card]);const keys=new Set(missing(p).map(x=>x[0]));
   el.querySelectorAll('[data-k]').forEach(f=>f.classList.toggle('miss',keys.has(f.dataset.k)));
   const t=el.querySelector('.faltam');const m=missing(p);if(t){t.textContent=m.length?'Falta preencher: '+m.map(x=>x[1]).join(', '):'Tudo preenchido ✓'}}
-function renderTabs(){const l=lists();$('tabs').innerHTML=[['catalogo','Catálogo',l.catalogo.length],['conferencia','Conferência',l.conferencia.length],['compras','Compras'],['looks','Looks'],['perfil','Perfil'],['lixeira','Lixeira',l.lixeira.length]]
+function renderTabs(){const l=lists();$('tabs').innerHTML=[['catalogo','Catálogo',l.catalogo.length],['conferencia','Conferência',l.conferencia.length],['conjuntos','Conjuntos'],['compras','Compras'],['looks','Looks'],['perfil','Perfil'],['lixeira','Lixeira',l.lixeira.length]]
   .map(t=>'<button type="button" role="tab" class="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+(t[2]!==undefined?' ('+t[2]+')':'')+'</button>').join('')}
-const VIEWS=['compras','looks','perfil'];
+const VIEWS=['conjuntos','compras','looks','perfil'];
 // Category groups used by the multi-select filter; categories are matched by their first word
 const groups=[['cima','Partes de cima',['Blusa','Body']],['baixo','Partes de baixo',['Calça','Short','Saia']],['unica','Peças únicas',['Vestido','Jardineira','Macacão']],
   ['pijama','Pijamas',['Pijama']],['agasalho','Agasalhos',['Casaco','Colete','Poncho']],['acessorio','Acessórios',['Meias','Chapéu','Calçado','Acessório']]];
@@ -263,14 +321,16 @@ function renderFalta(){const conf=tab==='conferencia';$('fFalta').hidden=!conf;i
   $('fFalta').innerHTML='<option value="">Falta: tudo</option>'+Object.entries(n).sort((a,b)=>b[1][1]-a[1][1]).map(([k,[l,c]])=>'<option value="'+k+'"'+(k===cur?' selected':'')+'>Falta: '+esc(l)+' ('+c+')</option>').join('')}
 function render(){if(!loaded)return;renderTabs();
   const isView=VIEWS.includes(tab);['tools','grpChips','count','grid'].forEach(i=>$(i).hidden=isView);$('subChips').hidden=true;$('view').hidden=!isView;
-  if(isView){picked.clear();renderBulk();({compras:renderCompras,looks:renderLooks,perfil:renderPerfil})[tab]();return}
+  if(isView){picked.clear();renderBulk();({conjuntos:renderConjuntos,compras:renderCompras,looks:renderLooks,perfil:renderPerfil})[tab]();return}
   renderCats();renderFalta();
-  const q=$('q').value.trim().toLocaleLowerCase('pt-BR'),fe=$('fEst').value,fs=$('fServe').value,ff=tab==='conferencia'?$('fFalta').value:'';
+  {const cur=$('fCor').value,n={};Object.values(pecas).filter(ativa).forEach(p=>{const c=corDe(p)||'sem';n[c]=(n[c]||0)+1});
+   $('fCor').innerHTML='<option value="">Cor: todas</option>'+cores.filter(c=>n[c]).map(c=>'<option'+(c===cur?' selected':'')+'>'+c+'</option>').join('')+(n.sem?'<option value="sem"'+(cur==='sem'?' selected':'')+'>Sem cor ('+n.sem+')</option>':'')}
+  const fcor=$('fCor').value,q=$('q').value.trim().toLocaleLowerCase('pt-BR'),fe=$('fEst').value,fs=$('fServe').value,ff=tab==='conferencia'?$('fFalta').value:'';
   $('grid').classList.toggle('compact',tab==='conferencia');
-  let list=lists()[tab].filter(p=>(!q||[p.nome,p.marca,p.tamanho,p.categoria,p.notes].join(' ').toLocaleLowerCase('pt-BR').includes(q))&&catOk(p.categoria)&&(!fe||p.estacao===fe)&&(!fs||p.serve===fs)&&(!ff||pendencias(p).some(x=>x[0]===ff)));
+  let list=lists()[tab].filter(p=>(!q||[p.nome,p.marca,p.tamanho,p.categoria,p.notes].join(' ').toLocaleLowerCase('pt-BR').includes(q))&&catOk(p.categoria)&&(!fcor||(fcor==='sem'?!corDe(p):corDe(p)===fcor))&&(!fe||p.estacao===fe)&&(!fs||p.serve===fs)&&(!ff||pendencias(p).some(x=>x[0]===ff)));
   list.sort((a,b)=>String(a.categoria).localeCompare(String(b.categoria),'pt-BR')||String(a.nome).localeCompare(String(b.nome),'pt-BR'));
   shown=list.map(p=>p.id);$('selAll').hidden=tab!=='conferencia';renderBulk();
-  $('clearF').hidden=!(q||fe||fs||ff||grpSel.size);
+  $('clearF').hidden=!(q||fe||fs||ff||fcor||grpSel.size);
   $('count').textContent=list.length+(list.length===1?' peça':' peças')+(tab==='conferencia'?' com algo a completar':tab==='lixeira'?' na lixeira':'');
   $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">'+(tab==='conferencia'?'Nada para conferir. Tudo completo ♡':'Nenhuma peça aqui.')+'</div>';
   $('grid').querySelectorAll('[data-card]').forEach(markMissing)}
@@ -296,7 +356,7 @@ $('bApply').addEventListener('click',()=>{
 
 // ---------- events ----------
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;open.clear();picked.clear();render();window.scrollTo({top:0})}});
-['q','fEst','fServe','fFalta'].forEach(id=>$(id).addEventListener('input',render));
+['q','fCor','fEst','fServe','fFalta'].forEach(id=>$(id).addEventListener('input',render));
 $('add').addEventListener('click',()=>{const id='p-'+Date.now().toString(36);pecas[id]={nome:'',categoria:'',tamanho:'',marca:'',estacao:'',serve:'',conservacao:'boa',conjunto:'',notes:'',foto:'',rotacao:0,refotografar:false,aviso:'',situacao:'ativa',criado_em:new Date().toISOString()};
   queue(id,0);tab='catalogo';open.clear();open.add(id);$('q').value='';grpSel.clear();catOff.clear();$('fEst').value='';$('fServe').value='';render();
   const el=$('grid').querySelector('[data-card="'+id+'"]');if(el){el.scrollIntoView({block:'center'});el.querySelector('[data-k=nome]').focus()}});
@@ -307,10 +367,13 @@ $('grid').addEventListener('change',async e=>{const el=e.target;
     edit(el.dataset.id,{[el.dataset.k]:el.value},0);refreshCard(el.dataset.id)}
   if(el.matches('input[data-photo]')&&el.files[0]){const id=el.dataset.photo;if(!assets){setSave('error','Envio de foto indisponível aqui.');return}
     setSave('pending','Enviando foto…');try{const r=await assets.upload(el.files[0]);edit(id,{foto:r.url,foto_asset:r.id,rotacao:0,refotografar:false},0);refreshCard(id)}catch(err){setSave('error','A foto não foi enviada. Tente de novo.')}}});
-$('clearF').addEventListener('click',()=>{$('q').value='';$('fEst').value='';$('fServe').value='';$('fFalta').value='';grpSel.clear();catOff.clear();render()});
+$('clearF').addEventListener('click',()=>{$('q').value='';$('fCor').value='';$('fEst').value='';$('fServe').value='';$('fFalta').value='';grpSel.clear();catOff.clear();render()});
 // Tapping the photo opens or closes the piece's editor
 $('grid').addEventListener('click',e=>{const img=e.target.closest('.photo img');if(!img)return;const id=img.closest('[data-card]').dataset.card;open.has(id)?open.delete(id):open.add(id);refreshCard(id)});
 $('grid').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
+  if(d.link){const id=d.link,s=setOf(id);openPicker('Vincular a qual peça?',s?s[1].pecas:[id],other=>{link(id,other);refreshCard(id)});return}
+  if(d.leave){leave(d.leave);refreshCard(d.leave);return}
+  if(d.goto){goTo(d.goto);return}
   // Saves right away (instead of waiting for the pause) and closes the editor
   if(d.savepiece){const id=d.savepiece;document.activeElement&&document.activeElement.blur();clearTimeout(timers[id]);
     const done=()=>{open.delete(id);refreshCard(id);setSave('','Salvo ✓')};if(pending[id]){flush(id).then(()=>{if(!pending[id])done()})}else done();return}
@@ -390,6 +453,11 @@ function renderLooks(){const s=lookSeason||seasons3().cur,looks=gerarLooks(s);
     '<div class="panel" style="margin-top:14px"><h2>Looks salvos ('+fav.length+')</h2>'+(fav.length?'<div class="looks">'+fav.map(([id,l])=>lookCard(l,id)).join('')+'</div>':'<p class="hint">Toque em "♡ Salvar look" para guardar os favoritos.</p>')+'</div>'}
 $('view').addEventListener('change',e=>{if(e.target.id==='lookS'){lookSeason=e.target.value;renderLooks()}});
 $('view').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id==='newSet'){openPicker('Primeira peça do conjunto',[],a=>openPicker('Qual peça combina com ela?',[a],bb=>{link(a,bb);renderConjuntos()}));return}
+  if(b.dataset.cjremove){const[cid,id]=b.dataset.cjremove.split('|');leave(id);renderConjuntos();return}
+  if(b.dataset.cjadd){const cid=b.dataset.cjadd,c=conjuntos[cid];openPicker('Adicionar ao conjunto',c.pecas,id=>{link(c.pecas[0],id);renderConjuntos()});return}
+  if(b.dataset.cjdel){if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Toque de novo para desfazer';return}dropSet(b.dataset.cjdel);renderConjuntos();return}
+  if(b.dataset.goto){goTo(b.dataset.goto);return}
   if(b.id==='lookMore'){lookSeed=(Date.now()%2147483646)+1;renderLooks()}
   if(b.dataset.save){const id='l-'+Date.now().toString(36);looksSalvos[id]={pecas:b.dataset.save.split('|'),estacao:lookSeason||seasons3().cur};saveDoc('looks',id,looksSalvos[id],0);b.textContent='♡ Salvo';b.disabled=true;renderLooks()}
   if(b.dataset.unsave){const id=b.dataset.unsave;delete looksSalvos[id];db.collection('looks').doc(id).delete();renderLooks()}
@@ -422,6 +490,7 @@ function renderPerfilHtml(){const sizes=distinct('tamanho'),ms=Object.entries(me
     '<button type="button" class="btn primary" id="addMed" style="justify-self:start">💾 Salvar medida</button>'+
     (ms.length?'<div class="scroll"><table class="tbl"><thead><tr><th>Data</th><th>Altura</th><th>Peso</th><th>Cintura</th><th>Pé</th><th>Tórax</th><th></th></tr></thead><tbody>'+
       ms.map(([id,m])=>'<tr><td>'+esc(String(m.data).split('-').reverse().join('/'))+'</td><td>'+esc(m.altura)+'</td><td>'+esc(m.peso)+'</td><td>'+esc(m.cintura)+'</td><td>'+esc(m.pe)+'</td><td>'+esc(m.torax)+'</td><td><button type="button" class="btn danger" data-delmed="'+esc(id)+'">Apagar</button></td></tr>').join('')+'</tbody></table></div>':'<p class="hint">Nenhuma medida anotada ainda.</p>')+'</div>'}
+$('view').addEventListener('input',e=>{const i=e.target;if(i.dataset.cjname){const cid=i.dataset.cjname;conjuntos[cid]=Object.assign({},conjuntos[cid],{nome:i.value});saveDoc('conjuntos',cid,conjuntos[cid])}});
 $('view').addEventListener('input',e=>{const i=e.target;if(i.dataset.pf){perfil=Object.assign({},perfil,{[i.dataset.pf]:i.value});saveDoc('perfil','principal',perfil,i.tagName==='SELECT'||i.type==='date'?0:600)}});
 
 // ---------- data ----------
@@ -435,6 +504,7 @@ $('view').addEventListener('input',e=>{const i=e.target;if(i.dataset.pf){perfil=
     loaded=true;if(first||VIEWS.includes(tab))render();else s.docChanges().forEach(ch=>refreshCard(ch.doc.id))},()=>setSave('error','A conexão caiu. Recarregue a página.'));
   const small=(col,set)=>db.collection(col).onSnapshot(s=>{set(Object.fromEntries(s.docs.map(d=>[d.id,d.data()])));if(VIEWS.includes(tab)&&!typing())render()},()=>{});
   small('perfil',m=>{perfil=Object.assign({},m.principal)});small('medidas',m=>{medidas=m});small('config',m=>{config=Object.assign({},m.compras)});small('looks',m=>{looksSalvos=m});
+  db.collection('conjuntos').onSnapshot(s=>{conjuntos=Object.fromEntries(s.docs.map(d=>[d.id,d.data()]));if(VIEWS.includes(tab)){if(!typing())render()}else open.forEach(id=>refreshCard(id))},()=>{});
 })();
 })();
 </script>
