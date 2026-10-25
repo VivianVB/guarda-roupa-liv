@@ -64,7 +64,13 @@ label.f:has(.miss){color:var(--warn)}
 .row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 auto}
 .danger.armed{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .empty{grid-column:1/-1;text-align:center;border:1px dashed var(--line);border-radius:14px;padding:32px 16px;color:var(--muted)}
-@media (max-width:560px){.grid{grid-template-columns:minmax(0,1fr)}.card.open{grid-column:auto}}
+/* Conferência: compact list, small photo on the side */
+.grid.compact{grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr))}
+.compact .card{flex-direction:row;align-items:flex-start}.compact .card.open{grid-column:auto}
+.compact .photo{flex:0 0 112px;width:112px;aspect-ratio:1/1}
+.compact .rot{bottom:4px;right:4px;gap:4px}.compact .rot button{width:28px;height:28px;font-size:.9rem}
+.compact .body{flex:1;min-width:0;padding:10px}
+@media (max-width:560px){.grid{grid-template-columns:minmax(0,1fr)}.card.open{grid-column:auto}.compact .photo{flex-basis:84px;width:84px}}
 @media (prefers-reduced-motion:reduce){.photo img{transition:none}}
 </style>
 
@@ -79,6 +85,7 @@ label.f:has(.miss){color:var(--warn)}
     <select id="fCat" aria-label="Categoria"></select>
     <select id="fEst" aria-label="Estação"><option value="">Todas as estações</option><option value="calor">Calor</option><option value="meia">Meia estação</option><option value="frio">Frio</option></select>
     <select id="fServe" aria-label="Serve"><option value="">Serve: todas</option><option value="sim">Serve</option><option value="grande">Ainda grande</option><option value="pequena">Já ficou pequena</option></select>
+    <select id="fFalta" aria-label="O que falta" hidden></select>
     <button class="btn primary" id="add" type="button">＋ Nova peça</button>
     <span class="save" id="save"><span class="dot"></span><span id="saveText">Conectando…</span></span>
   </div>
@@ -116,6 +123,9 @@ function missing(p){const m=[],e=k=>!String(p[k]||'').trim();
   if(e('nome'))m.push(['nome','nome']);if(e('categoria'))m.push(['categoria','categoria']);else if(needsSleeve(p.categoria))m.push(['categoria','manga na categoria']);
   if(e('tamanho'))m.push(['tamanho','tamanho']);if(e('marca'))m.push(['marca','marca']);if(e('estacao'))m.push(['estacao','estação']);if(e('serve'))m.push(['serve','serve?']);return m}
 const ativa=p=>p.situacao!=='baixa';
+// Everything that keeps a piece in Conferência, as [key,label] — used by the "O que falta" filter
+function pendencias(p){const r=missing(p).map(x=>x[1]==='manga na categoria'?['manga','Manga na categoria']:[x[0],x[1][0].toUpperCase()+x[1].slice(1)]);
+  if(p.aviso)r.push(['aviso','Aviso']);if(!p.foto)r.push(['semfoto','Sem foto']);if(p.refotografar)r.push(['refotografar','Refotografar']);return r}
 function precisaConferir(p){return ativa(p)&&(missing(p).length||p.aviso||p.refotografar||!p.foto)}
 function lists(){const all=Object.entries(pecas).map(([id,p])=>Object.assign({id},p));
   return{catalogo:all.filter(ativa),conferencia:all.filter(precisaConferir),baixas:all.filter(p=>!ativa(p))}}
@@ -156,9 +166,13 @@ function renderTabs(){const l=lists();$('tabs').innerHTML=[['catalogo','Catálog
   .map(t=>'<button type="button" role="tab" class="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+' ('+t[2]+')</button>').join('')}
 function renderCats(){const cur=$('fCat').value,used=[...new Set(Object.values(pecas).map(p=>p.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   $('fCat').innerHTML='<option value="">Todas as categorias</option>'+used.map(c=>'<option'+(c===cur?' selected':'')+'>'+esc(c)+'</option>').join('')}
-function render(){if(!loaded)return;renderTabs();renderCats();
-  const q=$('q').value.trim().toLocaleLowerCase('pt-BR'),fc=$('fCat').value,fe=$('fEst').value,fs=$('fServe').value;
-  let list=lists()[tab].filter(p=>(!q||[p.nome,p.marca,p.tamanho,p.categoria,p.notes].join(' ').toLocaleLowerCase('pt-BR').includes(q))&&(!fc||p.categoria===fc)&&(!fe||p.estacao===fe)&&(!fs||p.serve===fs));
+function renderFalta(){const conf=tab==='conferencia';$('fFalta').hidden=!conf;if(!conf)return;const cur=$('fFalta').value,n={};
+  lists().conferencia.forEach(p=>pendencias(p).forEach(([k,l])=>{n[k]=n[k]||[l,0];n[k][1]++}));
+  $('fFalta').innerHTML='<option value="">Falta: tudo</option>'+Object.entries(n).sort((a,b)=>b[1][1]-a[1][1]).map(([k,[l,c]])=>'<option value="'+k+'"'+(k===cur?' selected':'')+'>Falta: '+esc(l)+' ('+c+')</option>').join('')}
+function render(){if(!loaded)return;renderTabs();renderCats();renderFalta();
+  const q=$('q').value.trim().toLocaleLowerCase('pt-BR'),fc=$('fCat').value,fe=$('fEst').value,fs=$('fServe').value,ff=tab==='conferencia'?$('fFalta').value:'';
+  $('grid').classList.toggle('compact',tab==='conferencia');
+  let list=lists()[tab].filter(p=>(!q||[p.nome,p.marca,p.tamanho,p.categoria,p.notes].join(' ').toLocaleLowerCase('pt-BR').includes(q))&&(!fc||p.categoria===fc)&&(!fe||p.estacao===fe)&&(!fs||p.serve===fs)&&(!ff||pendencias(p).some(x=>x[0]===ff)));
   list.sort((a,b)=>String(a.categoria).localeCompare(String(b.categoria),'pt-BR')||String(a.nome).localeCompare(String(b.nome),'pt-BR'));
   $('count').textContent=list.length+(list.length===1?' peça':' peças')+(tab==='conferencia'?' com algo a completar':tab==='baixas'?' que saíram do guarda-roupa':'');
   $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">'+(tab==='conferencia'?'Nada para conferir. Tudo completo ♡':'Nenhuma peça aqui.')+'</div>';
@@ -169,7 +183,7 @@ function refreshCard(id){const el=$('grid').querySelector('[data-card="'+CSS.esc
 
 // ---------- events ----------
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;open.clear();render();window.scrollTo({top:0})}});
-['q','fCat','fEst','fServe'].forEach(id=>$(id).addEventListener('input',render));
+['q','fCat','fEst','fServe','fFalta'].forEach(id=>$(id).addEventListener('input',render));
 $('add').addEventListener('click',()=>{const id='p-'+Date.now().toString(36);pecas[id]={nome:'',categoria:'',tamanho:'',marca:'',estacao:'',serve:'',conservacao:'boa',conjunto:'',notes:'',foto:'',rotacao:0,refotografar:false,aviso:'',situacao:'ativa',criado_em:new Date().toISOString()};
   queue(id,0);tab='catalogo';open.clear();open.add(id);$('q').value='';$('fCat').value='';$('fEst').value='';$('fServe').value='';render();
   const el=$('grid').querySelector('[data-card="'+id+'"]');if(el){el.scrollIntoView({block:'center'});el.querySelector('[data-k=nome]').focus()}});
