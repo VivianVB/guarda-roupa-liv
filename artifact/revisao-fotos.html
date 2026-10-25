@@ -57,6 +57,11 @@ main{padding-block:16px 48px}
 .miss{border-color:var(--new)!important;background:var(--new-soft)!important}
 label.f:has(.miss){color:var(--new)}
 .faltam{font-size:.8rem;color:var(--new);font-weight:700;margin:0}
+.confirm{border:0;border-radius:10px;padding:12px;font-weight:700;font-size:.95rem;background:var(--ok);color:var(--surface)}
+.confirm[aria-pressed="true"]{background:var(--ok-soft);color:var(--ok)}
+.qbtn.del.armed{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.reshoot{margin:0;font-size:.82rem;font-weight:700;color:var(--accent)}
+.linkish{border:0;background:none;padding:0;font-size:.8rem;color:var(--muted);text-decoration:underline;text-align:left;justify-self:start}
 .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .qbtn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 8px;font-weight:700;font-size:.9rem}
 .qbtn[aria-pressed="true"]{background:var(--new-soft);border-color:var(--new);color:var(--new)}
@@ -118,9 +123,15 @@ window.addEventListener('beforeunload',e=>{if(anyPending()){e.preventDefault();e
 // ---------- decisions ----------
 function value(p){const d=decisions[p.id]||{};if(d.status==='ja-cadastrada'&&byId[d.match])return d.match;return others.some(o=>o[0]===d.status)?d.status:''}
 function kind(v){return !v?'pendentes':byId[v]?'vinculadas':v==='nova'?'novas':v}
+// A photo leaves "A conferir" only when it is excluded or its decision was confirmed
+// Answers given before the Confirm button existed have no `confirmado` field and count as confirmed
+const isConfirmed=d=>d.confirmado??true;
+function group(p){const v=value(p),d=decisions[p.id]||{};return v==='excluida'?'excluida':(v&&isConfirmed(d))?'conferidas':'pendentes'}
+function reshoot(p){const d=decisions[p.id]||{};return d.refotografar??!!p.refotografar}
 function setChoice(photo,v){const d=Object.assign({},decisions[photo]);if(!v){d.status='a-conferir';d.match=''}else if(byId[v]){d.status='ja-cadastrada';d.match=v}else{d.status=v;d.match=''}
+  d.confirmado=false;// a new choice needs a new confirmation
   // "Peça nova" starts from the photo's suggestion; only empty fields are filled, nothing typed is overwritten
-  if(v==='nova'){const s=(photos.find(x=>x.id===photo)||{}).sugestao||{};['nome','categoria','estacao'].forEach(k=>{if(s[k]&&!String(d[k]||'').trim())d[k]=s[k]})}
+  if(v==='nova'){const s=(photos.find(x=>x.id===photo)||{}).sugestao||{};['nome','categoria','estacao','conjunto'].forEach(k=>{if(s[k]&&!String(d[k]||'').trim())d[k]=s[k]})}
   decisions[photo]=d;queue(photo,0)}
 
 // ---------- rendering ----------
@@ -135,17 +146,21 @@ function pick(photo,k,label,opts){const d=decisions[photo]||{},cur=String(d[k]||
 function extra(p,v){const c=byId[v]||{};
   if(byId[v]||v==='nova')return '<div class="extra">'+(v==='nova'?field(p.id,'nome','Nome da peça','Ex.: Calça floral branca')+pick(p.id,'categoria','Categoria',[['','Escolher…']].concat(cats.map(x=>[x,x]))):'')+
     '<div class="two">'+field(p.id,'tamanho','Tamanho',c.tamanho||'Ex.: 2')+field(p.id,'marca','Marca',c.marca||'Ex.: Kyly')+'</div>'+
-    '<div class="two">'+pick(p.id,'estacao','Estação',seasons)+pick(p.id,'serve','Serve na Liv?',fits)+'</div></div>';
+    '<div class="two">'+pick(p.id,'estacao','Estação',seasons)+pick(p.id,'serve','Serve na Liv?',fits)+'</div>'+
+    field(p.id,'conjunto','Faz conjunto com (opcional)',c.conjunto||'Ex.: short da foto 112-1')+'</div>';
   if(v==='repetida')return '<div class="extra">'+pick(p.id,'igual_a','Mesma peça da foto',[['','Escolher foto…']].concat(photos.filter(x=>x.id!==p.id).map(x=>[x.id,x.id])))+'</div>';return ''}
-function card(p){const v=value(p),d=decisions[p.id]||{},cand=byId[p.candidate_id];
-  return '<article class="card'+(v?' done':'')+'" data-card="'+esc(p.id)+'"><div class="photo"><img loading="lazy" src="'+esc(p.url)+'" alt="Foto '+esc(p.id)+'" style="'+rotStyle(d.rotacao)+'">'+
+function card(p){const v=value(p),d=decisions[p.id]||{},cand=byId[p.candidate_id],ok=!!(v&&isConfirmed(d)),rs=reshoot(p);
+  return '<article class="card'+(ok||v==='excluida'?' done':'')+'" data-card="'+esc(p.id)+'"><div class="photo"><img loading="lazy" src="'+esc(p.url)+'" alt="Foto '+esc(p.id)+'" style="'+rotStyle(d.rotacao)+'">'+
   '<div class="rot"><button type="button" data-rot="-90" data-p="'+esc(p.id)+'" aria-label="Girar para a esquerda">⟲</button><button type="button" data-rot="90" data-p="'+esc(p.id)+'" aria-label="Girar para a direita">⟳</button></div></div>'+
-  '<div class="body"><div class="top">'+tag(v)+'<span class="file">'+esc(p.id)+'</span></div>'+
+  '<div class="body"><div class="top">'+tag(v)+(ok?'<span class="tag linked">✓ Confirmada</span>':'')+'<span class="file">'+esc(p.id)+'</span></div>'+
+  (rs?'<p class="reshoot">📷 Refotografar'+(p.refotografar?': '+esc(p.refotografar):'')+'</p>':'')+
   '<div class="quick"><button type="button" class="qbtn" data-quick="nova" data-p="'+esc(p.id)+'" aria-pressed="'+(v==='nova')+'">＋ Peça nova</button>'+
   '<button type="button" class="qbtn del" data-quick="excluida" data-p="'+esc(p.id)+'" aria-pressed="'+(v==='excluida')+'">Excluir</button></div>'+
   (p.candidate_match?'<p class="hint">Sugestão: '+esc(p.candidate_match)+'</p>':'')+
   (cand&&v!==cand.id?'<button type="button" class="use" data-use="'+esc(p.id)+'" data-id="'+esc(cand.id)+'">✓ É esta: '+esc(pieceLabel(cand))+'</button>':'')+
   '<select data-main="'+esc(p.id)+'" aria-label="Peça do catálogo"><option value="">Escolher peça…</option>'+optionsHtml()+'</select>'+extra(p,v)+'<p class="faltam" data-faltam hidden></p>'+
+  (v&&v!=='excluida'?'<button type="button" class="confirm" data-confirm="'+esc(p.id)+'" aria-pressed="'+ok+'">'+(ok?'✓ Confirmada · tocar para reabrir':'✓ Confirmar')+'</button>':'')+
+  '<button type="button" class="linkish" data-reshoot="'+esc(p.id)+'">'+(rs?'Tirar da lista de refotografar':'📷 Pôr na lista de refotografar')+'</button>'+
   '<details'+(d.notes?' open':'')+'><summary>Observação</summary><textarea rows="2" data-k="notes" data-p="'+esc(p.id)+'" placeholder="Ex.: tamanho na etiqueta, mancha, ganhou de…">'+esc(d.notes)+'</textarea></details></div></article>'}
 // Fields still to fill for this decision: [field key, label]
 const needsSleeve=c=>['Body','Blusa','Vestido','Pijama'].includes(c);
@@ -156,10 +171,12 @@ function missing(id,v){const d=decisions[id]||{},c=byId[v]||{},m=[],e=k=>!String
 function markMissing(el){if(!el)return;const id=el.dataset.card,p=photos.find(x=>x.id===id);if(!p)return;const m=missing(id,value(p)),keys=new Set(m.map(x=>x[0]));
   el.querySelectorAll('[data-k]').forEach(f=>f.classList.toggle('miss',keys.has(f.dataset.k)));
   const t=el.querySelector('[data-faltam]');t.hidden=!m.length;t.textContent=m.length?'Falta preencher: '+m.map(x=>x[1]).join(', '):''}
-function counts(){const c={pendentes:0,vinculadas:0,novas:0,repetida:0,duvida:0,excluida:0};photos.forEach(p=>c[kind(value(p))]++);c.todas=photos.length;c.conferidas=c.todas-c.pendentes-c.excluida;return c}
-function inFilter(p){const k=kind(value(p));return filter==='todas'||(filter==='conferidas'?k!=='pendentes'&&k!=='excluida':k===filter)}
+function counts(){const c={pendentes:0,conferidas:0,excluida:0,vinculadas:0,novas:0,repetida:0,duvida:0,refotografar:0,todas:photos.length};
+  photos.forEach(p=>{const g=group(p),k=kind(value(p));c[g]++;if(g!=='excluida'&&k!=='pendentes')c[k]++;if(reshoot(p))c.refotografar++});return c}
+function inFilter(p){if(filter==='todas')return true;if(filter==='refotografar')return reshoot(p);const g=group(p);
+  if(['pendentes','conferidas','excluida'].includes(filter))return g===filter;return g!=='excluida'&&kind(value(p))===filter}
 function renderBar(){const c=counts(),done=c.todas-c.pendentes;$('meter').style.width=(photos.length?done/photos.length*100:0)+'%';$('count').textContent=done+' de '+photos.length+' resolvidas';
-  $('chips').innerHTML=[['pendentes','A conferir'],['conferidas','Conferidas'],['todas','Todas'],['vinculadas','Vinculadas'],['novas','Peças novas'],['repetida','Repetidas'],['duvida','Dúvidas'],['excluida','Excluídas']].map(f=>'<button type="button" class="chip" data-filter="'+f[0]+'" aria-pressed="'+(filter===f[0])+'">'+f[1]+' ('+c[f[0]]+')</button>').join('')}
+  $('chips').innerHTML=[['pendentes','A conferir'],['conferidas','Conferidas'],['todas','Todas'],['vinculadas','Vinculadas'],['novas','Peças novas'],['repetida','Repetidas'],['duvida','Dúvidas'],['refotografar','Refotografar'],['excluida','Excluídas']].map(f=>'<button type="button" class="chip" data-filter="'+f[0]+'" aria-pressed="'+(filter===f[0])+'">'+f[1]+' ('+c[f[0]]+')</button>').join('')}
 function syncMain(el){const p=photos.find(x=>x.id===el.dataset.main);if(p)el.value=value(p)}
 function render(){if(!(ready.fotos&&ready.catalogo&&ready.decisoes))return;
   if(!photos.length){$('grid').innerHTML='<div class="empty">Nenhuma foto cadastrada ainda. Peça ao Claude para carregar as fotos.</div>';renderBar();return}
@@ -177,9 +194,15 @@ $('grid').addEventListener('change',e=>{const el=e.target;
   if(el.dataset.main){setChoice(el.dataset.main,el.value);refreshCard(el.dataset.main)}
   else if(el.matches('select[data-k]')){decisions[el.dataset.p]=Object.assign({},decisions[el.dataset.p],{[el.dataset.k]:el.value});queue(el.dataset.p,0);markMissing(el.closest('[data-card]'))}});
 $('grid').addEventListener('input',e=>{const el=e.target;if(el.matches('input[data-k],textarea[data-k]')){decisions[el.dataset.p]=Object.assign({},decisions[el.dataset.p],{[el.dataset.k]:el.value});queue(el.dataset.p);markMissing(el.closest('[data-card]'))}});
-$('grid').addEventListener('click',e=>{const u=e.target.closest('[data-use]'),r=e.target.closest('[data-rot]'),q=e.target.closest('[data-quick]');
-  // Quick buttons toggle: a second tap on the active one clears the decision
-  if(q){const p=q.dataset.p,cur=value(photos.find(x=>x.id===p));setChoice(p,cur===q.dataset.quick?'':q.dataset.quick);refreshCard(p)}
+$('grid').addEventListener('click',e=>{const u=e.target.closest('[data-use]'),r=e.target.closest('[data-rot]'),q=e.target.closest('[data-quick]'),
+  cf=e.target.closest('[data-confirm]'),rs=e.target.closest('[data-reshoot]');
+  // Quick buttons toggle: a second tap on the active one clears the decision. Excluding asks for a second tap first.
+  if(q){const p=q.dataset.p,cur=value(photos.find(x=>x.id===p)),want=q.dataset.quick;
+    if(want==='excluida'&&cur!=='excluida'&&!q.dataset.armed){q.dataset.armed='1';q.classList.add('armed');q.textContent='Toque de novo para excluir';
+      setTimeout(()=>{if(q.isConnected){delete q.dataset.armed;q.classList.remove('armed');q.textContent='Excluir'}},3500);return}
+    setChoice(p,cur===want?'':want);refreshCard(p)}
+  if(cf){const p=cf.dataset.confirm,d=Object.assign({},decisions[p]);d.confirmado=!isConfirmed(d);decisions[p]=d;queue(p,0);refreshCard(p)}
+  if(rs){const p=rs.dataset.reshoot,ph=photos.find(x=>x.id===p),d=Object.assign({},decisions[p]);d.refotografar=!reshoot(ph);decisions[p]=d;queue(p,0);refreshCard(p)}
   if(u){setChoice(u.dataset.use,u.dataset.id);refreshCard(u.dataset.use)}
   if(r){const p=r.dataset.p,d=Object.assign({},decisions[p]);d.rotacao=(((d.rotacao||0)+Number(r.dataset.rot))%360+360)%360;decisions[p]=d;
     const img=r.closest('.photo').querySelector('img');img.setAttribute('style',rotStyle(d.rotacao));queue(p,400)}});

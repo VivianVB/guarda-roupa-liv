@@ -25,6 +25,7 @@ Contexto completo do projeto, catálogo e etapas: `PROJETO.md`.
 - Categoria "Moletom" não existe: moletons entram como **Casaco**.
 - A **manga entra na categoria** de blusas, bodies, vestidos e pijamas: "Body manga curta", "Body manga longa", "Body sem manga", o mesmo para Blusa e Vestido, e "Pijama manga curta" / "Pijama manga longa". Peças cuja manga não está confirmada ficam só com "Body", "Blusa", "Vestido" ou "Pijama" até a usuária dizer.
 - **Estação** (calor, meia estação, frio) é um campo da peça, não categoria.
+- **Conjuntos são separados** em peças próprias (blusa, short, calça…), ligadas pelo campo `conjunto` ("faz conjunto com…"). Ficam como peça única só os **pijamas e macacões**. O conjunto térmico também é separado (blusa térmica + calça térmica). Quando a foto não permite recortar as peças, a foto vai para a lista **Refotografar** (`fotos/<id>.refotografar` com o motivo).
 
 ## Revisão de fotos (página privada no claude.ai)
 
@@ -32,6 +33,7 @@ Contexto completo do projeto, catálogo e etapas: `PROJETO.md`.
 - Cada escolha da usuária é salva sozinha no banco da página. Ler com a ferramenta `ArtifactData` nesse link:
   - `fotos/<arquivo>`: `url` da miniatura (asset), `candidate_match` (texto mostrado como "Sugestão"), `candidate_id`, `sugestao` {`nome`, `categoria`, `estacao`} usada para pré-preencher "Peça nova". Cópia das sugestões em `dados/sugestoes.tsv`.
   - `catalogo/<id>`: `nome`, `categoria`, `tamanho`, `marca`.
-  - `decisoes/<arquivo>`: `status` (`ja-cadastrada`, `nova`, `repetida`, `duvida`, `excluida` = não cadastrar, `a-conferir`), `match`, `nome`, `categoria`, `tamanho`, `marca`, `estacao`, `serve`, `igual_a`, `notes`, `rotacao` (graus, sentido horário).
+  - `decisoes/<arquivo>`: `status` (`ja-cadastrada`, `nova`, `repetida`, `duvida`, `excluida` = não cadastrar, `a-conferir`), `match`, `nome`, `categoria`, `tamanho`, `marca`, `estacao`, `serve`, `igual_a`, `conjunto`, `notes`, `rotacao` (graus, sentido horário), `confirmado` (a usuária tocou em "Confirmar"; respostas antigas sem o campo contam como confirmadas), `refotografar` (marcação da usuária, tem prioridade sobre a de `fotos`).
+- Não gravar em lote em `decisoes` enquanto a usuária está usando a página: as versões mudam a cada toque e o lote é recusado. Preferir mudanças na lógica da página ou gravar quando ela parar.
 - Quando a usuária pedir para atualizar, ler `decisoes`, mostrar o resumo e só então aplicar no catálogo.
 - O site antigo no GitHub Pages (`revisao.html` + `dados/decisoes.json`) ficou como histórico; não é mais o lugar de revisar.
