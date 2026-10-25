@@ -96,7 +96,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 let db=null,photos=[],catalog=[],byId={},decisions={},filter='pendentes',ready={fotos:false,catalogo:false,decisoes:false};
 const others=[['nova','Peça nova (cadastrar depois)'],['repetida','Foto repetida (descartar)'],['duvida','Não sei / tenho dúvida'],['excluida','Excluída (não cadastrar)']];
 // Sleeve is part of the category for tops, bodies and dresses (decided with the user)
-const cats=['Acessório','Blusa manga curta','Blusa manga longa','Blusa sem manga','Body manga curta','Body manga longa','Body sem manga','Calça','Calçado','Casaco','Chapéu','Conjunto','Jardineira','Macacão','Meias','Pijama manga curta','Pijama manga longa','Poncho','Saia','Short','Vestido manga curta','Vestido manga longa','Vestido sem manga'];
+const cats=['Acessório','Blusa manga curta','Blusa manga longa','Blusa sem manga','Body manga curta','Body manga longa','Body sem manga','Calça','Calçado','Casaco','Chapéu','Colete','Conjunto','Jardineira','Macacão','Meias','Pijama manga curta','Pijama manga longa','Poncho','Saia','Short','Vestido manga curta','Vestido manga longa','Vestido sem manga'];
 const seasons=[['','—'],['calor','Calor'],['meia','Meia estação'],['frio','Frio']];
 const fits=[['','A conferir'],['sim','Sim, serve'],['grande','Ainda grande'],['pequena','Já ficou pequena']];
 const pieceLabel=c=>c.nome+(c.tamanho||c.marca?' · '+[c.tamanho,c.marca].filter(Boolean).join(' · '):'');
