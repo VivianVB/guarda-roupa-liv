@@ -103,6 +103,7 @@ const others=[['nova','Peça nova (cadastrar depois)'],['repetida','Foto repetid
 // Sleeve is part of the category for tops, bodies and dresses (decided with the user)
 const cats=['Acessório','Blusa manga curta','Blusa manga longa','Blusa sem manga','Body manga curta','Body manga longa','Body sem manga','Calça','Calçado','Casaco','Chapéu','Colete','Conjunto','Jardineira','Macacão','Meias','Pijama manga curta','Pijama manga longa','Poncho','Saia','Short','Vestido manga curta','Vestido manga longa','Vestido sem manga'];
 const seasons=[['','—'],['calor','Calor'],['meia','Meia estação'],['frio','Frio']];
+const conds=[['','—'],['nova','Nova'],['boa','Boa'],['desgastada','Desgastada'],['defeito','Com defeito']];
 const fits=[['','A conferir'],['sim','Sim, serve'],['grande','Ainda grande'],['pequena','Já ficou pequena']];
 const pieceLabel=c=>c.nome+(c.tamanho||c.marca?' · '+[c.tamanho,c.marca].filter(Boolean).join(' · '):'');
 
@@ -147,6 +148,7 @@ function extra(p,v){const c=byId[v]||{};
   if(byId[v]||v==='nova')return '<div class="extra">'+(v==='nova'?field(p.id,'nome','Nome da peça','Ex.: Calça floral branca')+pick(p.id,'categoria','Categoria',[['','Escolher…']].concat(cats.map(x=>[x,x]))):'')+
     '<div class="two">'+field(p.id,'tamanho','Tamanho',c.tamanho||'Ex.: 2')+field(p.id,'marca','Marca',c.marca||'Ex.: Kyly')+'</div>'+
     '<div class="two">'+pick(p.id,'estacao','Estação',seasons)+pick(p.id,'serve','Serve na Liv?',fits)+'</div>'+
+    pick(p.id,'conservacao','Conservação',conds)+
     field(p.id,'conjunto','Faz conjunto com (opcional)',c.conjunto||'Ex.: short da foto 112-1')+'</div>';
   if(v==='repetida')return '<div class="extra">'+pick(p.id,'igual_a','Mesma peça da foto',[['','Escolher foto…']].concat(photos.filter(x=>x.id!==p.id).map(x=>[x.id,x.id])))+'</div>';return ''}
 function card(p){const v=value(p),d=decisions[p.id]||{},cand=byId[p.candidate_id],ok=!!(v&&isConfirmed(d)),rs=reshoot(p);
@@ -166,7 +168,7 @@ function card(p){const v=value(p),d=decisions[p.id]||{},cand=byId[p.candidate_id
 const needsSleeve=c=>['Body','Blusa','Vestido','Pijama'].includes(c);
 function missing(id,v){const d=decisions[id]||{},c=byId[v]||{},m=[],e=k=>!String(d[k]||'').trim();
   if(v==='nova'){if(e('nome'))m.push(['nome','nome']);if(e('categoria'))m.push(['categoria','categoria']);else if(needsSleeve(String(d.categoria).trim()))m.push(['categoria','manga na categoria'])}
-  if(v==='nova'||byId[v]){if(e('tamanho')&&!c.tamanho)m.push(['tamanho','tamanho']);if(e('marca')&&!c.marca)m.push(['marca','marca']);if(e('estacao'))m.push(['estacao','estação']);if(e('serve'))m.push(['serve','serve?'])}
+  if(v==='nova'||byId[v]){if(e('tamanho')&&!c.tamanho)m.push(['tamanho','tamanho']);if(e('marca')&&!c.marca)m.push(['marca','marca']);if(e('estacao'))m.push(['estacao','estação']);if(e('serve'))m.push(['serve','serve?']);if(e('conservacao'))m.push(['conservacao','conservação'])}
   if(v==='repetida'&&e('igual_a'))m.push(['igual_a','foto igual']);return m}
 function markMissing(el){if(!el)return;const id=el.dataset.card,p=photos.find(x=>x.id===id);if(!p)return;const m=missing(id,value(p)),keys=new Set(m.map(x=>x[0]));
   el.querySelectorAll('[data-k]').forEach(f=>f.classList.toggle('miss',keys.has(f.dataset.k)));
