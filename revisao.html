@@ -24,14 +24,15 @@ select{font:inherit;font-size:.92rem;width:100%;border:1px solid var(--line);bor
 details summary{font-size:.8rem;color:var(--muted);cursor:pointer}details textarea{margin-top:6px;resize:vertical}
 .empty{grid-column:1/-1;text-align:center;border:1px dashed #d7c4b8;border-radius:16px;padding:30px;color:var(--muted)}
 .foot{display:flex;gap:9px;flex-wrap:wrap;margin-top:24px;align-items:center}.foot button{font:inherit;font-weight:650;border-radius:11px;padding:10px 13px;cursor:pointer;border:1px solid var(--line);background:var(--pale);color:var(--ink)}.foot .primary{background:var(--rose);border-color:var(--rose);color:#fff}
+.linkish{font:inherit;font-weight:650;background:none;border:0;padding:0;color:#86504d;text-decoration:underline;cursor:pointer}
 .note{font-size:.82rem;color:var(--muted);line-height:1.5}a{color:#86504d}
 @media(max-width:560px){main{padding:12px 12px 40px}.grid{grid-template-columns:1fr}.photo{aspect-ratio:4/3}}
 </style></head><body>
 <header><div class="wrap"><div class="eyebrow">Guarda-Roupa Digital da Liv</div><h1>Revisar as fotos ♡</h1><p class="sub">Para cada foto, escolha a peça do catálogo que ela mostra — ou marque como peça nova. Nada é alterado no catálogo automaticamente.</p>
-<div class="progress"><div id="bar"></div></div><div class="progress-label" id="progressLabel">Carregando as fotos…</div></div></header>
+<div class="progress"><div id="bar"></div></div><div class="progress-label" id="progressLabel">Carregando as fotos…</div><p class="sub" style="font-size:.82rem;margin-top:8px">Começou em outro aparelho? <button class="importBtn linkish">Importar decisões (JSON)</button></p></div></header>
 <main>
 <nav class="chips" id="chips"></nav>
-<section id="grid" class="grid"><div class="empty">Carregando as fotos…</div></section><div class="foot"><button class="primary" id="export">Exportar decisões (JSON)</button><button id="exportCsv">Exportar planilha (CSV)</button><a href="./">← Voltar ao catálogo</a></div>
+<section id="grid" class="grid"><div class="empty">Carregando as fotos…</div></section><div class="foot"><button class="primary" id="export">Exportar decisões (JSON)</button><button id="exportCsv">Exportar planilha (CSV)</button><button class="importBtn">Importar decisões (JSON)</button><a href="./">← Voltar ao catálogo</a></div><input type="file" id="importFile" accept=".json,application/json" hidden>
 <p class="note">As escolhas ficam salvas neste navegador. Quando terminar, exporte o JSON para atualizarmos o catálogo.</p>
 </main>
 <script>
@@ -114,6 +115,15 @@ fetch('fotos/inventario.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error(
 function download(name,content,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function rows(){return photos.map(p=>{const v=value(p),d=decisions[p.photo]||{};return{foto:p.photo,decisao:!v?'A conferir':byId[v]?'Já cadastrada':others.find(o=>o[0]===v)[1],peca_id:byId[v]?v:'',peca:byId[v]?pieceLabel(byId[v]):'',nova_nome:v==='nova'?d.nome||'':'',nova_categoria:v==='nova'?d.categoria||'':'',tamanho:d.tamanho||'',marca:d.marca||'',serve:(fits.find(x=>x[0]===(d.serve||''))||fits[0])[1],igual_a:v==='repetida'?d.igual_a||'':'',sugestao:p.candidate_match||'',observacoes:d.notes||''}})}
 $('export').addEventListener('click',()=>download('decisoes-guarda-roupa-liv.json',JSON.stringify({exportado_em:new Date().toISOString(),decisoes:decisions,resumo:rows()},null,2),'application/json;charset=utf-8'));
+// Import an exported JSON (from this page) so the review can continue on another device
+document.querySelectorAll('.importBtn').forEach(b=>b.addEventListener('click',()=>$('importFile').click()));
+$('importFile').addEventListener('change',async e=>{const file=e.target.files[0];e.target.value='';if(!file)return;
+try{const data=JSON.parse(await file.text()),inc=data&&data.decisoes;if(!inc||typeof inc!=='object')throw Error('o arquivo não tem decisões desta página');
+const resolved=d=>d&&d.status&&d.status!=='a-conferir',entries=Object.entries(inc).filter(([k])=>photos.some(p=>p.photo===k));
+const conflicts=entries.filter(([k,d])=>resolved(decisions[k])&&JSON.stringify(decisions[k])!==JSON.stringify(d)).length;
+if(conflicts&&!confirm(conflicts+' foto(s) já têm uma decisão diferente neste navegador. Substituir pelas do arquivo?'))return;
+entries.forEach(([k,d])=>{decisions[k]=d});save();render();alert(entries.filter(([,d])=>resolved(d)).length+' decisões importadas.')}
+catch(err){alert('Não foi possível importar: '+err.message)}});
 $('exportCsv').addEventListener('click',()=>{const r=rows(),cols=Object.keys(r[0]||{foto:''});download('decisoes-guarda-roupa-liv.csv','﻿'+[cols,...r.map(x=>cols.map(c=>x[c]))].map(l=>l.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n'),'text/csv;charset=utf-8')});
 })();
 </script></body></html>
