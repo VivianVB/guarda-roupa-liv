@@ -32,6 +32,6 @@ Contexto completo do projeto, catálogo e etapas: `PROJETO.md`.
 - Cada escolha da usuária é salva sozinha no banco da página. Ler com a ferramenta `ArtifactData` nesse link:
   - `fotos/<arquivo>`: `url` da miniatura (asset), `candidate_match`, `candidate_id`.
   - `catalogo/<id>`: `nome`, `categoria`, `tamanho`, `marca`.
-  - `decisoes/<arquivo>`: `status` (`ja-cadastrada`, `nova`, `repetida`, `duvida`, `a-conferir`), `match`, `nome`, `categoria`, `tamanho`, `marca`, `estacao`, `serve`, `igual_a`, `notes`, `rotacao` (graus, sentido horário).
+  - `decisoes/<arquivo>`: `status` (`ja-cadastrada`, `nova`, `repetida`, `duvida`, `excluida` = não cadastrar, `a-conferir`), `match`, `nome`, `categoria`, `tamanho`, `marca`, `estacao`, `serve`, `igual_a`, `notes`, `rotacao` (graus, sentido horário).
 - Quando a usuária pedir para atualizar, ler `decisoes`, mostrar o resumo e só então aplicar no catálogo.
 - O site antigo no GitHub Pages (`revisao.html` + `dados/decisoes.json`) ficou como histórico; não é mais o lugar de revisar.

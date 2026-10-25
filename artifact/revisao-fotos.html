@@ -54,6 +54,10 @@ main{padding-block:16px 48px}
 .file{font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .tag{border-radius:99px;padding:3px 9px;font-size:.72rem;font-weight:700;background:var(--sunk);color:var(--muted)}
 .tag.linked{background:var(--ok-soft);color:var(--ok)}.tag.new{background:var(--new-soft);color:var(--new)}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qbtn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 8px;font-weight:700;font-size:.9rem}
+.qbtn[aria-pressed="true"]{background:var(--new-soft);border-color:var(--new);color:var(--new)}
+.qbtn.del{color:var(--muted)}.qbtn.del[aria-pressed="true"]{background:var(--sunk);border-color:var(--muted);color:var(--fg)}
 .hint{font-size:.82rem;color:var(--muted);margin:0}
 .use{border:1px dashed var(--accent);background:var(--accent-soft);border-radius:10px;padding:9px;text-align:left;font-weight:700;font-size:.85rem}
 select,input,textarea{font:inherit;font-size:.92rem;width:100%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px;background:var(--surface);color:var(--fg)}
@@ -87,7 +91,7 @@ details summary{font-size:.8rem;color:var(--muted);cursor:pointer}details textar
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let db=null,photos=[],catalog=[],byId={},decisions={},filter='pendentes',ready={fotos:false,catalogo:false,decisoes:false};
-const others=[['nova','Peça nova (cadastrar depois)'],['repetida','Foto repetida (descartar)'],['duvida','Não sei / tenho dúvida']];
+const others=[['nova','Peça nova (cadastrar depois)'],['repetida','Foto repetida (descartar)'],['duvida','Não sei / tenho dúvida'],['excluida','Excluída (não cadastrar)']];
 // Sleeve is part of the category for tops, bodies and dresses (decided with the user)
 const cats=['Acessório','Blusa manga curta','Blusa manga longa','Blusa sem manga','Body manga curta','Body manga longa','Body sem manga','Calça','Calçado','Casaco','Chapéu','Conjunto','Jardineira','Macacão','Meias','Pijama','Poncho','Saia','Short','Vestido manga curta','Vestido manga longa','Vestido sem manga'];
 const seasons=[['','—'],['calor','Calor'],['meia','Meia estação'],['frio','Frio']];
@@ -131,14 +135,16 @@ function card(p){const v=value(p),d=decisions[p.id]||{},cand=byId[p.candidate_id
   return '<article class="card'+(v?' done':'')+'" data-card="'+esc(p.id)+'"><div class="photo"><img loading="lazy" src="'+esc(p.url)+'" alt="Foto '+esc(p.id)+'" style="'+rotStyle(d.rotacao)+'">'+
   '<div class="rot"><button type="button" data-rot="-90" data-p="'+esc(p.id)+'" aria-label="Girar para a esquerda">⟲</button><button type="button" data-rot="90" data-p="'+esc(p.id)+'" aria-label="Girar para a direita">⟳</button></div></div>'+
   '<div class="body"><div class="top">'+tag(v)+'<span class="file">'+esc(p.id)+'</span></div>'+
+  '<div class="quick"><button type="button" class="qbtn" data-quick="nova" data-p="'+esc(p.id)+'" aria-pressed="'+(v==='nova')+'">＋ Peça nova</button>'+
+  '<button type="button" class="qbtn del" data-quick="excluida" data-p="'+esc(p.id)+'" aria-pressed="'+(v==='excluida')+'">Excluir</button></div>'+
   (p.candidate_match?'<p class="hint">Sugestão: '+esc(p.candidate_match)+'</p>':'')+
   (cand&&v!==cand.id?'<button type="button" class="use" data-use="'+esc(p.id)+'" data-id="'+esc(cand.id)+'">✓ É esta: '+esc(pieceLabel(cand))+'</button>':'')+
   '<select data-main="'+esc(p.id)+'" aria-label="Peça do catálogo"><option value="">Escolher peça…</option>'+optionsHtml()+'</select>'+extra(p,v)+
   '<details'+(d.notes?' open':'')+'><summary>Observação</summary><textarea rows="2" data-k="notes" data-p="'+esc(p.id)+'" placeholder="Ex.: tamanho na etiqueta, mancha, ganhou de…">'+esc(d.notes)+'</textarea></details></div></article>'}
-function counts(){const c={pendentes:0,vinculadas:0,novas:0,repetida:0,duvida:0};photos.forEach(p=>c[kind(value(p))]++);c.todas=photos.length;c.conferidas=c.todas-c.pendentes;return c}
+function counts(){const c={pendentes:0,vinculadas:0,novas:0,repetida:0,duvida:0,excluida:0};photos.forEach(p=>c[kind(value(p))]++);c.todas=photos.length;c.conferidas=c.todas-c.pendentes;return c}
 function inFilter(p){const k=kind(value(p));return filter==='todas'||(filter==='conferidas'?k!=='pendentes':k===filter)}
 function renderBar(){const c=counts();$('meter').style.width=(photos.length?c.conferidas/photos.length*100:0)+'%';$('count').textContent=c.conferidas+' de '+photos.length+' conferidas';
-  $('chips').innerHTML=[['pendentes','A conferir'],['conferidas','Conferidas'],['todas','Todas'],['vinculadas','Vinculadas'],['novas','Peças novas'],['repetida','Repetidas'],['duvida','Dúvidas']].map(f=>'<button type="button" class="chip" data-filter="'+f[0]+'" aria-pressed="'+(filter===f[0])+'">'+f[1]+' ('+c[f[0]]+')</button>').join('')}
+  $('chips').innerHTML=[['pendentes','A conferir'],['conferidas','Conferidas'],['todas','Todas'],['vinculadas','Vinculadas'],['novas','Peças novas'],['repetida','Repetidas'],['duvida','Dúvidas'],['excluida','Excluídas']].map(f=>'<button type="button" class="chip" data-filter="'+f[0]+'" aria-pressed="'+(filter===f[0])+'">'+f[1]+' ('+c[f[0]]+')</button>').join('')}
 function syncMain(el){const p=photos.find(x=>x.id===el.dataset.main);if(p)el.value=value(p)}
 function render(){if(!(ready.fotos&&ready.catalogo&&ready.decisoes))return;
   if(!photos.length){$('grid').innerHTML='<div class="empty">Nenhuma foto cadastrada ainda. Peça ao Claude para carregar as fotos.</div>';renderBar();return}
@@ -156,7 +162,9 @@ $('grid').addEventListener('change',e=>{const el=e.target;
   if(el.dataset.main){setChoice(el.dataset.main,el.value);refreshCard(el.dataset.main)}
   else if(el.matches('select[data-k]')){decisions[el.dataset.p]=Object.assign({},decisions[el.dataset.p],{[el.dataset.k]:el.value});queue(el.dataset.p,0)}});
 $('grid').addEventListener('input',e=>{const el=e.target;if(el.matches('input[data-k],textarea[data-k]')){decisions[el.dataset.p]=Object.assign({},decisions[el.dataset.p],{[el.dataset.k]:el.value});queue(el.dataset.p)}});
-$('grid').addEventListener('click',e=>{const u=e.target.closest('[data-use]'),r=e.target.closest('[data-rot]');
+$('grid').addEventListener('click',e=>{const u=e.target.closest('[data-use]'),r=e.target.closest('[data-rot]'),q=e.target.closest('[data-quick]');
+  // Quick buttons toggle: a second tap on the active one clears the decision
+  if(q){const p=q.dataset.p,cur=value(photos.find(x=>x.id===p));setChoice(p,cur===q.dataset.quick?'':q.dataset.quick);refreshCard(p)}
   if(u){setChoice(u.dataset.use,u.dataset.id);refreshCard(u.dataset.use)}
   if(r){const p=r.dataset.p,d=Object.assign({},decisions[p]);d.rotacao=(((d.rotacao||0)+Number(r.dataset.rot))%360+360)%360;decisions[p]=d;
     const img=r.closest('.photo').querySelector('img');img.setAttribute('style',rotStyle(d.rotacao));queue(p,400)}});
