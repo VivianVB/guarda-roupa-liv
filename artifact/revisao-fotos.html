@@ -54,6 +54,9 @@ main{padding-block:16px 48px}
 .file{font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .tag{border-radius:99px;padding:3px 9px;font-size:.72rem;font-weight:700;background:var(--sunk);color:var(--muted)}
 .tag.linked{background:var(--ok-soft);color:var(--ok)}.tag.new{background:var(--new-soft);color:var(--new)}
+.miss{border-color:var(--new)!important;background:var(--new-soft)!important}
+label.f:has(.miss){color:var(--new)}
+.faltam{font-size:.8rem;color:var(--new);font-weight:700;margin:0}
 .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .qbtn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:11px 8px;font-weight:700;font-size:.9rem}
 .qbtn[aria-pressed="true"]{background:var(--new-soft);border-color:var(--new);color:var(--new)}
@@ -139,8 +142,17 @@ function card(p){const v=value(p),d=decisions[p.id]||{},cand=byId[p.candidate_id
   '<button type="button" class="qbtn del" data-quick="excluida" data-p="'+esc(p.id)+'" aria-pressed="'+(v==='excluida')+'">Excluir</button></div>'+
   (p.candidate_match?'<p class="hint">Sugestão: '+esc(p.candidate_match)+'</p>':'')+
   (cand&&v!==cand.id?'<button type="button" class="use" data-use="'+esc(p.id)+'" data-id="'+esc(cand.id)+'">✓ É esta: '+esc(pieceLabel(cand))+'</button>':'')+
-  '<select data-main="'+esc(p.id)+'" aria-label="Peça do catálogo"><option value="">Escolher peça…</option>'+optionsHtml()+'</select>'+extra(p,v)+
+  '<select data-main="'+esc(p.id)+'" aria-label="Peça do catálogo"><option value="">Escolher peça…</option>'+optionsHtml()+'</select>'+extra(p,v)+'<p class="faltam" data-faltam hidden></p>'+
   '<details'+(d.notes?' open':'')+'><summary>Observação</summary><textarea rows="2" data-k="notes" data-p="'+esc(p.id)+'" placeholder="Ex.: tamanho na etiqueta, mancha, ganhou de…">'+esc(d.notes)+'</textarea></details></div></article>'}
+// Fields still to fill for this decision: [field key, label]
+const needsSleeve=c=>['Body','Blusa','Vestido'].includes(c);
+function missing(id,v){const d=decisions[id]||{},c=byId[v]||{},m=[],e=k=>!String(d[k]||'').trim();
+  if(v==='nova'){if(e('nome'))m.push(['nome','nome']);if(e('categoria'))m.push(['categoria','categoria']);else if(needsSleeve(String(d.categoria).trim()))m.push(['categoria','manga na categoria'])}
+  if(v==='nova'||byId[v]){if(e('tamanho')&&!c.tamanho)m.push(['tamanho','tamanho']);if(e('marca')&&!c.marca)m.push(['marca','marca']);if(e('estacao'))m.push(['estacao','estação']);if(e('serve'))m.push(['serve','serve?'])}
+  if(v==='repetida'&&e('igual_a'))m.push(['igual_a','foto igual']);return m}
+function markMissing(el){if(!el)return;const id=el.dataset.card,p=photos.find(x=>x.id===id);if(!p)return;const m=missing(id,value(p)),keys=new Set(m.map(x=>x[0]));
+  el.querySelectorAll('[data-k]').forEach(f=>f.classList.toggle('miss',keys.has(f.dataset.k)));
+  const t=el.querySelector('[data-faltam]');t.hidden=!m.length;t.textContent=m.length?'Falta preencher: '+m.map(x=>x[1]).join(', '):''}
 function counts(){const c={pendentes:0,vinculadas:0,novas:0,repetida:0,duvida:0,excluida:0};photos.forEach(p=>c[kind(value(p))]++);c.todas=photos.length;c.conferidas=c.todas-c.pendentes;return c}
 function inFilter(p){const k=kind(value(p));return filter==='todas'||(filter==='conferidas'?k!=='pendentes':k===filter)}
 function renderBar(){const c=counts();$('meter').style.width=(photos.length?c.conferidas/photos.length*100:0)+'%';$('count').textContent=c.conferidas+' de '+photos.length+' conferidas';
@@ -150,18 +162,18 @@ function render(){if(!(ready.fotos&&ready.catalogo&&ready.decisoes))return;
   if(!photos.length){$('grid').innerHTML='<div class="empty">Nenhuma foto cadastrada ainda. Peça ao Claude para carregar as fotos.</div>';renderBar();return}
   const list=photos.filter(inFilter);
   $('grid').innerHTML=list.length?list.map(card).join(''):'<div class="empty">Nenhuma foto neste filtro.</div>';
-  $('grid').querySelectorAll('select[data-main]').forEach(syncMain);renderBar()}
+  $('grid').querySelectorAll('select[data-main]').forEach(syncMain);$('grid').querySelectorAll('[data-card]').forEach(markMissing);renderBar()}
 function refreshCard(photo){const el=$('grid').querySelector('[data-card="'+CSS.escape(photo)+'"]');if(!el){renderBar();return}
-  if(el.contains(document.activeElement)&&document.activeElement.matches('input,textarea')){renderBar();return}
+  if(el.contains(document.activeElement)&&document.activeElement.matches('input,textarea')){markMissing(el);renderBar();return}
   const p=photos.find(x=>x.id===photo),t=document.createElement('div');t.innerHTML=card(p);const fresh=t.firstElementChild;
   fresh.querySelector('.photo').replaceWith(el.querySelector('.photo'));fresh.querySelector('.photo img').setAttribute('style',rotStyle((decisions[photo]||{}).rotacao));
-  el.replaceWith(fresh);syncMain(fresh.querySelector('select[data-main]'));renderBar()}
+  el.replaceWith(fresh);syncMain(fresh.querySelector('select[data-main]'));markMissing(fresh);renderBar()}
 
 // ---------- events ----------
 $('grid').addEventListener('change',e=>{const el=e.target;
   if(el.dataset.main){setChoice(el.dataset.main,el.value);refreshCard(el.dataset.main)}
-  else if(el.matches('select[data-k]')){decisions[el.dataset.p]=Object.assign({},decisions[el.dataset.p],{[el.dataset.k]:el.value});queue(el.dataset.p,0)}});
-$('grid').addEventListener('input',e=>{const el=e.target;if(el.matches('input[data-k],textarea[data-k]')){decisions[el.dataset.p]=Object.assign({},decisions[el.dataset.p],{[el.dataset.k]:el.value});queue(el.dataset.p)}});
+  else if(el.matches('select[data-k]')){decisions[el.dataset.p]=Object.assign({},decisions[el.dataset.p],{[el.dataset.k]:el.value});queue(el.dataset.p,0);markMissing(el.closest('[data-card]'))}});
+$('grid').addEventListener('input',e=>{const el=e.target;if(el.matches('input[data-k],textarea[data-k]')){decisions[el.dataset.p]=Object.assign({},decisions[el.dataset.p],{[el.dataset.k]:el.value});queue(el.dataset.p);markMissing(el.closest('[data-card]'))}});
 $('grid').addEventListener('click',e=>{const u=e.target.closest('[data-use]'),r=e.target.closest('[data-rot]'),q=e.target.closest('[data-quick]');
   // Quick buttons toggle: a second tap on the active one clears the decision
   if(q){const p=q.dataset.p,cur=value(photos.find(x=>x.id===p));setChoice(p,cur===q.dataset.quick?'':q.dataset.quick);refreshCard(p)}
