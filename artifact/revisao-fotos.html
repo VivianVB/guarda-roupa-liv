@@ -156,9 +156,9 @@ function missing(id,v){const d=decisions[id]||{},c=byId[v]||{},m=[],e=k=>!String
 function markMissing(el){if(!el)return;const id=el.dataset.card,p=photos.find(x=>x.id===id);if(!p)return;const m=missing(id,value(p)),keys=new Set(m.map(x=>x[0]));
   el.querySelectorAll('[data-k]').forEach(f=>f.classList.toggle('miss',keys.has(f.dataset.k)));
   const t=el.querySelector('[data-faltam]');t.hidden=!m.length;t.textContent=m.length?'Falta preencher: '+m.map(x=>x[1]).join(', '):''}
-function counts(){const c={pendentes:0,vinculadas:0,novas:0,repetida:0,duvida:0,excluida:0};photos.forEach(p=>c[kind(value(p))]++);c.todas=photos.length;c.conferidas=c.todas-c.pendentes;return c}
-function inFilter(p){const k=kind(value(p));return filter==='todas'||(filter==='conferidas'?k!=='pendentes':k===filter)}
-function renderBar(){const c=counts();$('meter').style.width=(photos.length?c.conferidas/photos.length*100:0)+'%';$('count').textContent=c.conferidas+' de '+photos.length+' conferidas';
+function counts(){const c={pendentes:0,vinculadas:0,novas:0,repetida:0,duvida:0,excluida:0};photos.forEach(p=>c[kind(value(p))]++);c.todas=photos.length;c.conferidas=c.todas-c.pendentes-c.excluida;return c}
+function inFilter(p){const k=kind(value(p));return filter==='todas'||(filter==='conferidas'?k!=='pendentes'&&k!=='excluida':k===filter)}
+function renderBar(){const c=counts(),done=c.todas-c.pendentes;$('meter').style.width=(photos.length?done/photos.length*100:0)+'%';$('count').textContent=done+' de '+photos.length+' resolvidas';
   $('chips').innerHTML=[['pendentes','A conferir'],['conferidas','Conferidas'],['todas','Todas'],['vinculadas','Vinculadas'],['novas','Peças novas'],['repetida','Repetidas'],['duvida','Dúvidas'],['excluida','Excluídas']].map(f=>'<button type="button" class="chip" data-filter="'+f[0]+'" aria-pressed="'+(filter===f[0])+'">'+f[1]+' ('+c[f[0]]+')</button>').join('')}
 function syncMain(el){const p=photos.find(x=>x.id===el.dataset.main);if(p)el.value=value(p)}
 function render(){if(!(ready.fotos&&ready.catalogo&&ready.decisoes))return;
