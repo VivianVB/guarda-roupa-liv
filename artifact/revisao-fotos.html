@@ -96,7 +96,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 let db=null,photos=[],catalog=[],byId={},decisions={},filter='pendentes',ready={fotos:false,catalogo:false,decisoes:false};
 const others=[['nova','Peça nova (cadastrar depois)'],['repetida','Foto repetida (descartar)'],['duvida','Não sei / tenho dúvida'],['excluida','Excluída (não cadastrar)']];
 // Sleeve is part of the category for tops, bodies and dresses (decided with the user)
-const cats=['Acessório','Blusa manga curta','Blusa manga longa','Blusa sem manga','Body manga curta','Body manga longa','Body sem manga','Calça','Calçado','Casaco','Chapéu','Conjunto','Jardineira','Macacão','Meias','Pijama','Poncho','Saia','Short','Vestido manga curta','Vestido manga longa','Vestido sem manga'];
+const cats=['Acessório','Blusa manga curta','Blusa manga longa','Blusa sem manga','Body manga curta','Body manga longa','Body sem manga','Calça','Calçado','Casaco','Chapéu','Conjunto','Jardineira','Macacão','Meias','Pijama manga curta','Pijama manga longa','Poncho','Saia','Short','Vestido manga curta','Vestido manga longa','Vestido sem manga'];
 const seasons=[['','—'],['calor','Calor'],['meia','Meia estação'],['frio','Frio']];
 const fits=[['','A conferir'],['sim','Sim, serve'],['grande','Ainda grande'],['pequena','Já ficou pequena']];
 const pieceLabel=c=>c.nome+(c.tamanho||c.marca?' · '+[c.tamanho,c.marca].filter(Boolean).join(' · '):'');
@@ -145,7 +145,7 @@ function card(p){const v=value(p),d=decisions[p.id]||{},cand=byId[p.candidate_id
   '<select data-main="'+esc(p.id)+'" aria-label="Peça do catálogo"><option value="">Escolher peça…</option>'+optionsHtml()+'</select>'+extra(p,v)+'<p class="faltam" data-faltam hidden></p>'+
   '<details'+(d.notes?' open':'')+'><summary>Observação</summary><textarea rows="2" data-k="notes" data-p="'+esc(p.id)+'" placeholder="Ex.: tamanho na etiqueta, mancha, ganhou de…">'+esc(d.notes)+'</textarea></details></div></article>'}
 // Fields still to fill for this decision: [field key, label]
-const needsSleeve=c=>['Body','Blusa','Vestido'].includes(c);
+const needsSleeve=c=>['Body','Blusa','Vestido','Pijama'].includes(c);
 function missing(id,v){const d=decisions[id]||{},c=byId[v]||{},m=[],e=k=>!String(d[k]||'').trim();
   if(v==='nova'){if(e('nome'))m.push(['nome','nome']);if(e('categoria'))m.push(['categoria','categoria']);else if(needsSleeve(String(d.categoria).trim()))m.push(['categoria','manga na categoria'])}
   if(v==='nova'||byId[v]){if(e('tamanho')&&!c.tamanho)m.push(['tamanho','tamanho']);if(e('marca')&&!c.marca)m.push(['marca','marca']);if(e('estacao'))m.push(['estacao','estação']);if(e('serve'))m.push(['serve','serve?'])}
