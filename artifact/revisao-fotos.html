@@ -435,19 +435,26 @@ $('view').addEventListener('input',e=>{const i=e.target;if(i.dataset.min){const 
 let lookSeason='',lookSeed=1;
 const rnd=()=>{lookSeed=(lookSeed*16807)%2147483647;return lookSeed/2147483647};
 const pickOne=a=>a[Math.floor(rnd()*a.length)];
+const NEUTRAS=['Branco','Bege','Cinza','Preto','Azul','Marrom'],HARMONIA=[['Rosa','Lilás'],['Rosa','Vinho'],['Vermelho','Vinho'],['Verde','Amarelo'],['Laranja','Amarelo'],['Laranja','Vermelho'],['Lilás','Vinho'],['Verde','Azul']];
+// cores iguais, neutras ou em harmonia combinam; duas cores vivas diferentes não; "Colorido" só com neutra
+function combina(a,b){const x=corDe(a),y=corDe(b);if(!x||!y||x===y)return true;if(x==='Colorido'||y==='Colorido')return NEUTRAS.includes(x==='Colorido'?y:x);if(NEUTRAS.includes(x)||NEUTRAS.includes(y))return true;return HARMONIA.some(([m,n])=>(m===x&&n===y)||(m===y&&n===x))}
 function gerarLooks(s){const all=Object.entries(pecas).map(([id,p])=>Object.assign({id},p)).filter(p=>usable(p)&&p.foto&&fitsSeason(p,s)),w=p=>String(p.categoria).split(' ')[0],
   tops=all.filter(p=>['Blusa','Body'].includes(w(p))&&(s==='frio'?/longa/.test(p.categoria):s==='calor'?!/longa/.test(p.categoria):true)),
   bottoms=all.filter(p=>(s==='calor'?['Short','Saia']:s==='frio'?['Calça']:['Short','Saia','Calça']).includes(p.categoria)),
-  unicas=all.filter(p=>['Vestido','Jardineira','Macacão'].includes(w(p))),coats=all.filter(p=>['Casaco','Colete','Poncho'].includes(p.categoria));
-  const out=[],seen=new Set();for(let i=0;i<40&&out.length<8;i++){let l=[];
-    if(unicas.length&&(!tops.length||!bottoms.length||rnd()<.35))l=[pickOne(unicas)];else if(tops.length&&bottoms.length)l=[pickOne(tops),pickOne(bottoms)];else break;
-    if(s==='frio'&&coats.length)l.push(pickOne(coats));const k=l.map(p=>p.id).sort().join('|');if(!seen.has(k)){seen.add(k);out.push(l)}}
+  unicas=all.filter(p=>['Vestido','Jardineira','Macacão'].includes(w(p))),coats=all.filter(p=>['Casaco','Colete','Poncho'].includes(p.categoria)),
+  acessorios=all.filter(p=>['Chapéu','Meias','Acessório'].includes(p.categoria));
+  const par=t=>{for(let k=0;k<15;k++){const b=pickOne(bottoms);if(combina(t,b))return b}return null};
+  const out=[],seen=new Set();for(let i=0;i<60&&out.length<8;i++){let l=[];
+    if(unicas.length&&(!tops.length||!bottoms.length||rnd()<.35))l=[pickOne(unicas)];else if(tops.length&&bottoms.length){const t=pickOne(tops),b=par(t);if(!b)continue;l=[t,b]}else break;
+    if(s==='frio'&&coats.length){const c=pickOne(coats);if(l.every(p=>combina(p,c)))l.push(c)}
+    if(acessorios.length&&rnd()<.5){const a=pickOne(acessorios);if(l.every(p=>combina(p,a)))l.push(a)}
+    const k=l.map(p=>p.id).sort().join('|');if(!seen.has(k)){seen.add(k);out.push(l)}}
   return out}
 function lookCard(l,saved){return '<div class="look"><div class="pics">'+l.map(p=>'<div><img loading="lazy" src="'+esc(p.foto)+'" alt="'+esc(p.nome)+'" style="'+rotStyle(p.rotacao)+'"></div>').join('')+'</div>'+
   '<div class="txt">'+l.map(p=>'<span>'+esc(p.nome)+'</span>').join('')+(saved?'<button type="button" class="btn" data-unsave="'+esc(saved)+'">Remover dos favoritos</button>':'<button type="button" class="btn primary" data-save="'+esc(l.map(p=>p.id).join('|'))+'">♡ Salvar look</button>')+'</div></div>'}
 function renderLooks(){const s=lookSeason||seasons3().cur,looks=gerarLooks(s);
   const fav=Object.entries(looksSalvos).map(([id,d])=>[id,(d.pecas||[]).map(pid=>pecas[pid]&&Object.assign({id:pid},pecas[pid])).filter(Boolean)]).filter(x=>x[1].length);
-  $('view').innerHTML='<div class="panel"><h2>Ideias de looks</h2><p class="hint">Combinações com o que serve e está em bom estado. Ainda sem IA: as combinações são sorteadas por regra (parte de cima + parte de baixo, ou peça única; casaco no frio).</p>'+
+  $('view').innerHTML='<div class="panel"><h2>Ideias de looks</h2><p class="hint">Combinações com o que serve e está em bom estado. Ainda sem IA: as combinações são sorteadas por regra (parte de cima + parte de baixo, ou peça única; casaco no frio). As cores são combinadas (neutras e cores em harmonia), e às vezes entra um acessório (chapéu, meias).</p>'+
     '<div class="row"><select id="lookS" aria-label="Estação">'+seasons.slice(1).map(o=>'<option value="'+o[0]+'"'+(o[0]===s?' selected':'')+'>'+o[1]+'</option>').join('')+'</select><button type="button" class="btn primary" id="lookMore">↻ Outras ideias</button></div></div>'+
     (looks.length?'<div class="looks">'+looks.map(l=>lookCard(l)).join('')+'</div>':'<div class="empty">Ainda não há peças suficientes desta estação com "serve" marcado.</div>')+
     '<div class="panel" style="margin-top:14px"><h2>Looks salvos ('+fav.length+')</h2>'+(fav.length?'<div class="looks">'+fav.map(([id,l])=>lookCard(l,id)).join('')+'</div>':'<p class="hint">Toque em "♡ Salvar look" para guardar os favoritos.</p>')+'</div>'}
