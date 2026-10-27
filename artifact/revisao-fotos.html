@@ -432,7 +432,16 @@ function renderCompras(){if(typing())return;const{cur,next,months}=seasons3(),a=
 $('view').addEventListener('input',e=>{const i=e.target;if(i.dataset.min){const m=Object.assign({},config.minimos);m[i.dataset.min]=Object.assign({},m[i.dataset.min],{[i.dataset.season]:i.value});config=Object.assign({},config,{minimos:m});saveDoc('config','compras',config)}});
 
 // ---------- Looks: rule-based combinations (top + bottom, or one-piece; coat when cold) ----------
-let lookSeason='',lookSeed=1;
+let lookSeason='',lookSeed=1,montando=null,montarSoEst=true;
+// montar look à mão: lista de ids escolhidos (null = fora do modo); mostra só peças com foto que servem
+function montarHtml(s){const cand=Object.entries(pecas).map(([id,p])=>Object.assign({id},p)).filter(p=>usable(p)&&p.foto&&(!montarSoEst||fitsSeason(p,s))).sort((a,b)=>String(a.categoria).localeCompare(String(b.categoria),'pt-BR')||String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+  const sel=montando.map(id=>pecas[id]&&Object.assign({id},pecas[id])).filter(Boolean);
+  return '<div class="panel"><h2>Montar look</h2><p class="hint">Toque nas peças para juntar. Toque de novo para tirar.</p>'+
+    '<div class="row"><select id="lookS" aria-label="Estação">'+seasons.slice(1).map(o=>'<option value="'+o[0]+'"'+(o[0]===s?' selected':'')+'>'+o[1]+'</option>').join('')+'</select><label><input type="checkbox" id="montarSo"'+(montarSoEst?' checked':'')+'> Só peças desta estação</label></div>'+
+    '<h2 style="margin-top:12px">No look ('+sel.length+')</h2>'+(sel.length?'<div class="look-sel" style="display:flex;flex-wrap:wrap;gap:8px">'+sel.map(p=>'<button type="button" class="btn" data-mtoggle="'+esc(p.id)+'" style="display:flex;align-items:center;gap:6px"><img src="'+esc(p.foto)+'" alt="" style="width:48px;height:48px;object-fit:contain;'+rotStyle(p.rotacao)+'"><span>'+esc(p.nome)+' ✕</span></button>').join('')+'</div>':'<p class="hint">Nenhuma peça ainda.</p>')+
+    '<div class="row" style="margin-top:10px"><button type="button" class="btn primary" id="montarSalvar"'+(sel.length?'':' disabled')+'>♡ Salvar look</button><button type="button" class="btn" id="montarFim">Voltar às ideias</button></div>'+
+    '<h2 style="margin-top:12px">Peças ('+cand.length+')</h2><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">'+
+    cand.map(p=>'<button type="button" data-mtoggle="'+esc(p.id)+'" aria-pressed="'+(montando.includes(p.id))+'" style="display:grid;gap:4px;padding:6px;text-align:left;border:2px solid '+(montando.includes(p.id)?'#b5545c':'transparent')+';background:#fff;border-radius:8px"><div style="aspect-ratio:1;position:relative"><img loading="lazy" src="'+esc(p.foto)+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;'+rotStyle(p.rotacao)+'"></div><span style="font-size:12px">'+esc(p.nome)+'</span></button>').join('')+'</div></div>'}
 const rnd=()=>{lookSeed=(lookSeed*16807)%2147483647;return lookSeed/2147483647};
 const pickOne=a=>a[Math.floor(rnd()*a.length)];
 const NEUTRAS=['Branco','Bege','Cinza','Preto','Azul','Marrom'],HARMONIA=[['Rosa','Lilás'],['Rosa','Vinho'],['Vermelho','Vinho'],['Verde','Amarelo'],['Laranja','Amarelo'],['Laranja','Vermelho'],['Lilás','Vinho'],['Verde','Azul']];
@@ -454,12 +463,17 @@ function lookCard(l,saved){return '<div class="look"><div class="pics">'+l.map(p
   '<div class="txt">'+l.map(p=>'<span>'+esc(p.nome)+'</span>').join('')+(saved?'<button type="button" class="btn" data-unsave="'+esc(saved)+'">Remover dos favoritos</button>':'<button type="button" class="btn primary" data-save="'+esc(l.map(p=>p.id).join('|'))+'">♡ Salvar look</button>')+'</div></div>'}
 function renderLooks(){const s=lookSeason||seasons3().cur,looks=gerarLooks(s);
   const fav=Object.entries(looksSalvos).map(([id,d])=>[id,(d.pecas||[]).map(pid=>pecas[pid]&&Object.assign({id:pid},pecas[pid])).filter(Boolean)]).filter(x=>x[1].length);
+  if(montando){$('view').innerHTML=montarHtml(s)+'<div class="panel" style="margin-top:14px"><h2>Looks salvos ('+fav.length+')</h2>'+(fav.length?'<div class="looks">'+fav.map(([id,l])=>lookCard(l,id)).join('')+'</div>':'<p class="hint">Toque em "♡ Salvar look" para guardar os favoritos.</p>')+'</div>';return}
   $('view').innerHTML='<div class="panel"><h2>Ideias de looks</h2><p class="hint">Combinações com o que serve e está em bom estado. Ainda sem IA: as combinações são sorteadas por regra (parte de cima + parte de baixo, ou peça única; casaco no frio). As cores são combinadas (neutras e cores em harmonia), e às vezes entra um acessório (chapéu, meias).</p>'+
-    '<div class="row"><select id="lookS" aria-label="Estação">'+seasons.slice(1).map(o=>'<option value="'+o[0]+'"'+(o[0]===s?' selected':'')+'>'+o[1]+'</option>').join('')+'</select><button type="button" class="btn primary" id="lookMore">↻ Outras ideias</button></div></div>'+
+    '<div class="row"><select id="lookS" aria-label="Estação">'+seasons.slice(1).map(o=>'<option value="'+o[0]+'"'+(o[0]===s?' selected':'')+'>'+o[1]+'</option>').join('')+'</select><button type="button" class="btn primary" id="lookMore">↻ Outras ideias</button><button type="button" class="btn" id="montarIniciar">✎ Montar look</button></div></div>'+
     (looks.length?'<div class="looks">'+looks.map(l=>lookCard(l)).join('')+'</div>':'<div class="empty">Ainda não há peças suficientes desta estação com "serve" marcado.</div>')+
     '<div class="panel" style="margin-top:14px"><h2>Looks salvos ('+fav.length+')</h2>'+(fav.length?'<div class="looks">'+fav.map(([id,l])=>lookCard(l,id)).join('')+'</div>':'<p class="hint">Toque em "♡ Salvar look" para guardar os favoritos.</p>')+'</div>'}
-$('view').addEventListener('change',e=>{if(e.target.id==='lookS'){lookSeason=e.target.value;renderLooks()}});
+$('view').addEventListener('change',e=>{if(e.target.id==='lookS'){lookSeason=e.target.value;renderLooks()}if(e.target.id==='montarSo'){montarSoEst=e.target.checked;renderLooks()}});
 $('view').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id==='montarIniciar'){montando=[];renderLooks();return}
+  if(b.id==='montarFim'){montando=null;renderLooks();return}
+  if(b.dataset.mtoggle&&montando){const i=montando.indexOf(b.dataset.mtoggle);i<0?montando.push(b.dataset.mtoggle):montando.splice(i,1);renderLooks();return}
+  if(b.id==='montarSalvar'&&montando&&montando.length){const id='l-'+Date.now().toString(36);looksSalvos[id]={pecas:montando.slice(),estacao:lookSeason||seasons3().cur};saveDoc('looks',id,looksSalvos[id],0);montando=null;renderLooks();return}
   if(b.id==='newSet'){openPicker('Primeira peça do conjunto',[],a=>openPicker('Qual peça combina com ela?',[a],bb=>{link(a,bb);renderConjuntos()}));return}
   if(b.dataset.cjremove){const[cid,id]=b.dataset.cjremove.split('|');leave(id);renderConjuntos();return}
   if(b.dataset.cjadd){const cid=b.dataset.cjadd,c=conjuntos[cid];openPicker('Adicionar ao conjunto',c.pecas,id=>{link(c.pecas[0],id);renderConjuntos()});return}
