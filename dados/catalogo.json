@@ -1601,6 +1601,26 @@
       "tamanho": "18 meses"
     },
     {
+      "id": "p-novo-20261027-10",
+      "nome": "Sobretudo roxo",
+      "categoria": "Casaco",
+      "tamanho": "",
+      "marca": "",
+      "estacao": "frio",
+      "serve": "",
+      "cor": "",
+      "conservacao": "boa",
+      "conjunto": "",
+      "notes": "Pendência: informado sem foto. Confirmar tamanho, marca, cor e se serve.",
+      "foto": "",
+      "foto_origem": "",
+      "rotacao": 0,
+      "refotografar": false,
+      "aviso": "Falta foto",
+      "situacao": "ativa",
+      "criado_em": "2026-10-27"
+    },
+    {
       "id": "p-novo-20261027-2",
       "aviso": "",
       "categoria": "Calça",
