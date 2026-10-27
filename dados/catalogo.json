@@ -1596,7 +1596,7 @@
       "notes": "Etiqueta: Limited Too, 18M, 60% algodão e 40% poliéster, feito em Bangladesh. Bordado de florzinha rosa, amarra na barra.",
       "refotografar": false,
       "rotacao": 0,
-      "serve": "",
+      "serve": "sim",
       "situacao": "ativa",
       "tamanho": "18 meses"
     },
@@ -1616,7 +1616,7 @@
       "notes": "Etiqueta: The Children's Place, 18-24 M, feito no Vietnã. Costura aparente dourada.",
       "refotografar": false,
       "rotacao": 0,
-      "serve": "",
+      "serve": "sim",
       "situacao": "ativa",
       "tamanho": "18-24 meses"
     },
@@ -1636,7 +1636,7 @@
       "notes": "Etiqueta: Carter's, 18m, feito no Vietnã. Estampa de unicórnios com glitter dourado, babadinho nos ombros.",
       "refotografar": false,
       "rotacao": 0,
-      "serve": "",
+      "serve": "sim",
       "situacao": "ativa",
       "tamanho": "18 meses"
     },
@@ -1780,7 +1780,7 @@
       "notes": "",
       "refotografar": false,
       "rotacao": 270,
-      "serve": "",
+      "serve": "sim",
       "situacao": "ativa",
       "tamanho": "2"
     }
