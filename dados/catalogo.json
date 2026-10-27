@@ -1741,6 +1741,26 @@
       "categoria": "Calça"
     },
     {
+      "id": "p-novo-20261027-9",
+      "nome": "Moletom azul-escuro",
+      "categoria": "Casaco",
+      "tamanho": "",
+      "marca": "Elian",
+      "estacao": "",
+      "serve": "",
+      "cor": "Azul",
+      "conservacao": "boa",
+      "conjunto": "",
+      "notes": "Pendência: informado sem foto. Confirmar tamanho, estação e se serve.",
+      "foto": "",
+      "foto_origem": "",
+      "rotacao": 0,
+      "refotografar": false,
+      "aviso": "Falta foto",
+      "situacao": "ativa",
+      "criado_em": "2026-10-27"
+    },
+    {
       "id": "pijama-lilas-branco",
       "aviso": "",
       "categoria": "Pijama manga longa",
