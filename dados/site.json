@@ -1,0 +1,63 @@
+{
+  "looks": [
+    {
+      "estacao": "calor",
+      "pecas": [
+        "p-124",
+        "p-147-2"
+      ]
+    },
+    {
+      "estacao": "calor",
+      "pecas": [
+        "body-branco-coracoes-marrons",
+        "p-100"
+      ]
+    },
+    {
+      "estacao": "calor",
+      "pecas": [
+        "p-novo-20261027-1",
+        "p-145",
+        "p-157-5"
+      ]
+    }
+  ],
+  "conjuntos": [
+    {
+      "nome": "Conjunto preto Bebê do Papai",
+      "pecas": [
+        "p-151-1",
+        "p-151-2"
+      ]
+    },
+    {
+      "nome": "Conjunto Kyly mostarda",
+      "pecas": [
+        "blusa-kyly-branca",
+        "short-kyly-mostarda"
+      ]
+    },
+    {
+      "nome": "Conjunto amarelo de sorvetes",
+      "pecas": [
+        "p-112-2",
+        "p-112-1"
+      ]
+    },
+    {
+      "nome": "Conjunto térmico cinza",
+      "pecas": [
+        "blusa-termica-cinza",
+        "calca-termica-cinza"
+      ]
+    },
+    {
+      "nome": "Conjunto térmico azul",
+      "pecas": [
+        "p-novo-20261027-7",
+        "p-novo-20261027-8"
+      ]
+    }
+  ]
+}

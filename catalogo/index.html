@@ -28,32 +28,94 @@ main{max-width:1200px;margin:auto;padding:0 16px 40px}
 .tag{display:inline-block;background:var(--line);border-radius:6px;padding:1px 6px;margin:2px 2px 0 0;color:var(--ink)}
 .vazio{padding:40px;text-align:center;color:var(--muted)}
 button{padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+
+nav.abas{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+nav.abas button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sec[hidden]{display:none}
+.tbl{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.tbl th,.tbl td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
+.tbl td.n,.tbl th.n{text-align:right}
+.tbl tr.need td{color:var(--accent);font-weight:600}
+.scroll{overflow-x:auto}
+.look{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
+.look h3{font-size:14px;margin:0 0 8px}
+.pics{display:flex;gap:8px;flex-wrap:wrap}
+.pics div{position:relative;width:96px;height:96px;background:#f3eef0;border-radius:8px;overflow:hidden}
+.pics img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.conj{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
+.conj h3{font-size:15px;margin:0 0 8px}
+.hint{color:var(--muted);font-size:13px;margin:0 0 10px}
 </style>
 </head>
 <body>
 <header>
   <h1>Guarda-roupa da Liv</h1>
   <p class="sub">Peças que estão no armário. Toque nos filtros para encontrar o que precisa.</p>
-  <div class="filters">
-    <select id="fCat" aria-label="Categoria"><option value="">Todas as categorias</option></select>
-    <select id="fTam" aria-label="Tamanho"><option value="">Todos os tamanhos</option></select>
-    <select id="fEst" aria-label="Estação"><option value="">Todas as estações</option><option value="calor">Calor</option><option value="meia">Meia estação</option><option value="frio">Frio</option></select>
-    <select id="fMar" aria-label="Marca"><option value="">Todas as marcas</option></select>
-    <input id="fBusca" type="search" placeholder="Buscar peça…" aria-label="Buscar peça">
-  </div>
+  <nav class="abas" aria-label="Menus">
+    <button type="button" data-aba="catalogo" aria-pressed="true">Catálogo</button>
+    <button type="button" data-aba="looks" aria-pressed="false">Looks</button>
+    <button type="button" data-aba="compras" aria-pressed="false">Compras</button>
+    <button type="button" data-aba="conjuntos" aria-pressed="false">Conjuntos</button>
+  </nav>
   <div class="count" id="count"></div>
 </header>
 <main>
-  <div class="grid" id="grid"></div>
-  <div class="vazio" id="vazio" hidden>Nenhuma peça com esses filtros.</div>
+  <section class="sec" id="s-catalogo">
+    <div class="filters">
+      <select id="fCat" aria-label="Categoria"><option value="">Todas as categorias</option></select>
+      <select id="fTam" aria-label="Tamanho"><option value="">Todos os tamanhos</option></select>
+      <select id="fEst" aria-label="Estação"><option value="">Todas as estações</option><option value="calor">Calor</option><option value="meia">Meia estação</option><option value="frio">Frio</option></select>
+      <select id="fMar" aria-label="Marca"><option value="">Todas as marcas</option></select>
+      <input id="fBusca" type="search" placeholder="Buscar peça…" aria-label="Buscar peça">
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="vazio" id="vazio" hidden>Nenhuma peça com esses filtros.</div>
+  </section>
+  <section class="sec" id="s-looks" hidden>
+    <p class="hint">Looks que a família montou e guardou.</p>
+    <div id="lista-looks"></div>
+  </section>
+  <section class="sec" id="s-compras" hidden>
+    <p class="hint">Quanto falta de cada tipo para a estação. Conta só peças que servem e não estão com defeito.</p>
+    <nav class="abas" aria-label="Estação da compra">
+      <button type="button" data-est="calor" aria-pressed="false">Calor</button>
+      <button type="button" data-est="meia" aria-pressed="false">Meia estação</button>
+      <button type="button" data-est="frio" aria-pressed="false">Frio</button>
+    </nav>
+    <div id="tabela-compras"></div>
+  </section>
+  <section class="sec" id="s-conjuntos" hidden>
+    <p class="hint">Peças que combinam entre si.</p>
+    <div id="lista-conjuntos"></div>
+  </section>
 </main>
 <script>
 const ESTACAO={calor:'Calor',meia:'Meia estação',frio:'Frio'};
 const SERVE={sim:'Serve',grande:'Ficou grande',pequena:'Ficou pequena'};
-let pecas=[];
+// mínimos padrão por tipo: [calor, meia, frio] (iguais aos do app)
+const ROWS=[['bodyc','Bodies manga curta / sem manga',['Body manga curta','Body sem manga'],[6,4,2]],['bodyl','Bodies manga longa',['Body manga longa'],[1,3,5]],
+  ['blusac','Blusas manga curta / sem manga',['Blusa manga curta','Blusa sem manga'],[5,3,1]],['blusal','Blusas manga longa',['Blusa manga longa'],[1,3,5]],
+  ['short','Shorts e saias',['Short','Saia'],[5,2,0]],['calca','Calças',['Calça'],[2,4,6]],
+  ['unica','Vestidos, jardineiras e macacões',['Vestido manga curta','Vestido sem manga','Vestido manga longa','Jardineira','Macacão'],[3,2,1]],
+  ['pijc','Pijamas de calor',['Pijama manga curta'],[3,2,0]],['pijl','Pijamas de frio',['Pijama manga longa'],[1,2,4]],
+  ['agas','Casacos e agasalhos',['Casaco','Colete','Poncho'],[0,2,3]],['meias','Meias (pares)',['Meias'],[3,5,7]]];
+const SI={calor:0,meia:1,frio:2};
+const seasonOf=m=>[10,11,12,1,2,3].includes(m)?'calor':[4,5,9].includes(m)?'meia':'frio';
+let pecas=[],porId={},extra={looks:[],conjuntos:[]};
 const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const opts=(sel,valores)=>{valores.sort((a,b)=>a.localeCompare(b,'pt-BR'));valores.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)})};
 const uniq=f=>[...new Set(pecas.map(f).filter(Boolean))];
+const fitsSeason=(p,s)=>!p.estacao||p.estacao===s||p.estacao==='meia';
+const usable=p=>p.serve==='sim'&&p.conservacao!=='defeito';
+const rot=p=>((p.rotacao||0)%360+360)%360;
+const thumb=p=>p&&p.foto_origem?`<img loading="lazy" src="../fotos/mini/${esc(p.foto_origem)}" alt="${esc(p.nome)}" style="transform:rotate(${rot(p)}deg)">`:'';
+
+// ---- catálogo ----
+function card(p){
+  const tags=[p.tamanho&&`Tamanho ${p.tamanho}`,p.marca,ESTACAO[p.estacao],SERVE[p.serve],p.conservacao&&`Estado: ${p.conservacao}`].filter(Boolean).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+  return `<div class="card"><div class="frame">${thumb(p)}</div><div class="nome">${esc(p.nome)}</div><div class="info">${esc(p.categoria)}<br>${tags}</div></div>`;
+}
 function filtrar(){
   const cat=$('fCat').value,tam=$('fTam').value,est=$('fEst').value,mar=$('fMar').value,q=$('fBusca').value.trim().toLocaleLowerCase('pt-BR');
   const lista=pecas.filter(p=>(!cat||p.categoria===cat)&&(!tam||p.tamanho===tam)&&(!est||p.estacao===est)&&(!mar||p.marca===mar)&&(!q||[p.nome,p.categoria,p.marca,p.cor].join(' ').toLocaleLowerCase('pt-BR').includes(q)));
@@ -61,21 +123,59 @@ function filtrar(){
   $('count').textContent=lista.length+(lista.length===1?' peça':' peças');
   $('vazio').hidden=lista.length>0;
 }
-const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function card(p){
-  const rot=((p.rotacao||0)%360+360)%360;
-  const img=p.foto_origem?`<img loading="lazy" src="../fotos/mini/${esc(p.foto_origem)}" alt="${esc(p.nome)}" style="transform:rotate(${rot}deg)">`:'';
-  const tags=[p.tamanho&&`Tamanho ${p.tamanho}`,p.marca,ESTACAO[p.estacao],SERVE[p.serve],p.conservacao&&`Estado: ${p.conservacao}`].filter(Boolean).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
-  return `<div class="card"><div class="frame">${img}</div><div class="nome">${esc(p.nome)}</div><div class="info">${esc(p.categoria)}<br>${tags}</div></div>`;
+
+// ---- looks ----
+function renderLooks(){
+  const itens=extra.looks.map(l=>({...l,ps:l.pecas.map(id=>porId[id]).filter(Boolean)})).filter(l=>l.ps.length);
+  $('lista-looks').innerHTML=itens.length?itens.map((l,i)=>`<div class="look"><h3>Look ${i+1}${l.estacao?' · '+esc(ESTACAO[l.estacao]||l.estacao):''}</h3><div class="pics">${l.ps.map(p=>`<div>${thumb(p)}</div>`).join('')}</div><div class="info">${l.ps.map(p=>esc(p.nome)).join(' + ')}</div></div>`).join(''):'<p class="hint">Ainda não há looks salvos.</p>';
 }
-fetch('../dados/catalogo.json').then(r=>r.json()).then(j=>{
+
+// ---- compras ----
+let estCompra=seasonOf(new Date().getMonth()+1);
+function renderCompras(){
+  document.querySelectorAll('[data-est]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.est===estCompra)));
+  const s=estCompra;let total=0;
+  const linhas=ROWS.map(r=>{
+    const tem=pecas.filter(p=>usable(p)&&r[2].includes(p.categoria)&&fitsSeason(p,s)).length;
+    const min=r[3][SI[s]],falta=Math.max(0,min-tem);total+=falta;
+    const guardadas=pecas.filter(p=>p.serve==='grande'&&r[2].includes(p.categoria)).length;
+    return `<tr${falta?' class="need"':''}><td>${esc(r[1])}</td><td class="n">${tem}</td><td class="n">${min}</td><td class="n">${falta?falta:'✓'}</td><td class="n">${guardadas||''}</td></tr>`;
+  }).join('');
+  $('tabela-compras').innerHTML=`<div class="scroll"><table class="tbl"><thead><tr><th>Tipo</th><th class="n">Tem</th><th class="n">Mínimo</th><th class="n">Comprar</th><th class="n">Já guardadas (maiores)</th></tr></thead><tbody>${linhas}</tbody></table></div><p class="hint">Total a comprar: ${total} ${total===1?'peça':'peças'}.</p>`;
+}
+
+// ---- conjuntos ----
+function renderConjuntos(){
+  const itens=extra.conjuntos.map(c=>({...c,ps:c.pecas.map(id=>porId[id]).filter(Boolean)})).filter(c=>c.ps.length).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  $('lista-conjuntos').innerHTML=itens.length?itens.map(c=>`<div class="conj"><h3>${esc(c.nome)}</h3><div class="pics">${c.ps.map(p=>`<div>${thumb(p)}</div>`).join('')}</div><div class="info">${c.ps.map(p=>esc(p.nome)).join(' + ')}</div></div>`).join(''):'<p class="hint">Ainda não há conjuntos.</p>';
+}
+
+// ---- abas ----
+function aba(nome){
+  document.querySelectorAll('[data-aba]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.aba===nome)));
+  ['catalogo','looks','compras','conjuntos'].forEach(n=>$('s-'+n).hidden=n!==nome);
+  $('count').hidden=nome!=='catalogo';
+  if(nome==='looks')renderLooks();
+  if(nome==='compras')renderCompras();
+  if(nome==='conjuntos')renderConjuntos();
+}
+document.querySelectorAll('[data-aba]').forEach(b=>b.addEventListener('click',()=>aba(b.dataset.aba)));
+document.querySelectorAll('[data-est]').forEach(b=>b.addEventListener('click',()=>{estCompra=b.dataset.est;renderCompras()}));
+
+Promise.all([
+  fetch('../dados/catalogo.json').then(r=>r.json()),
+  fetch('../dados/site.json').then(r=>r.json())
+]).then(([j,site])=>{
   pecas=j.pecas.filter(p=>p.situacao==='ativa');
+  pecas.forEach(p=>porId[p.id]=p);
+  extra=site;
   opts($('fCat'),uniq(p=>p.categoria));
   opts($('fTam'),uniq(p=>p.tamanho));
   opts($('fMar'),uniq(p=>p.marca));
   ['fCat','fTam','fEst','fMar'].forEach(id=>$(id).addEventListener('change',filtrar));
   $('fBusca').addEventListener('input',filtrar);
   filtrar();
+  aba('catalogo');
 }).catch(()=>{$('count').textContent='Não foi possível carregar as peças agora.'});
 </script>
 </body>
