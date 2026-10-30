@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guarda-roupa da Liv</title>
+<style>
+:root{--bg:#fbf7f5;--card:#fff;--ink:#3b2f33;--muted:#8a7a80;--line:#eadfe3;--accent:#b5545c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#201a1c;--card:#2b2326;--ink:#f3e9ec;--muted:#b8a6ad;--line:#43363b;--accent:#e08a92}}
+:root[data-theme="dark"]{--bg:#201a1c;--card:#2b2326;--ink:#f3e9ec;--muted:#b8a6ad;--line:#43363b;--accent:#e08a92}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,sans-serif}
+header{padding:20px 16px 8px;max-width:1200px;margin:auto}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 14px}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+select,input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit}
+.count{color:var(--muted);font-size:13px;margin:6px 0 12px}
+main{max-width:1200px;margin:auto;padding:0 16px 40px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media (min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}}
+@media (min-width:1000px){.grid{grid-template-columns:repeat(5,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:0}
+.frame{position:relative;aspect-ratio:1;background:#f3eef0}
+.frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.nome{font-weight:600;padding:8px 10px 2px;font-size:14px}
+.info{padding:0 10px 10px;color:var(--muted);font-size:12.5px}
+.tag{display:inline-block;background:var(--line);border-radius:6px;padding:1px 6px;margin:2px 2px 0 0;color:var(--ink)}
+.vazio{padding:40px;text-align:center;color:var(--muted)}
+button{padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <h1>Guarda-roupa da Liv</h1>
+  <p class="sub">Peças que estão no armário. Toque nos filtros para encontrar o que precisa.</p>
+  <div class="filters">
+    <select id="fCat" aria-label="Categoria"><option value="">Todas as categorias</option></select>
+    <select id="fTam" aria-label="Tamanho"><option value="">Todos os tamanhos</option></select>
+    <select id="fEst" aria-label="Estação"><option value="">Todas as estações</option><option value="calor">Calor</option><option value="meia">Meia estação</option><option value="frio">Frio</option></select>
+    <select id="fMar" aria-label="Marca"><option value="">Todas as marcas</option></select>
+    <input id="fBusca" type="search" placeholder="Buscar peça…" aria-label="Buscar peça">
+  </div>
+  <div class="count" id="count"></div>
+</header>
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="vazio" id="vazio" hidden>Nenhuma peça com esses filtros.</div>
+</main>
+<script>
+const ESTACAO={calor:'Calor',meia:'Meia estação',frio:'Frio'};
+const SERVE={sim:'Serve',grande:'Ficou grande',pequena:'Ficou pequena'};
+let pecas=[];
+const $=id=>document.getElementById(id);
+const opts=(sel,valores)=>{valores.sort((a,b)=>a.localeCompare(b,'pt-BR'));valores.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)})};
+const uniq=f=>[...new Set(pecas.map(f).filter(Boolean))];
+function filtrar(){
+  const cat=$('fCat').value,tam=$('fTam').value,est=$('fEst').value,mar=$('fMar').value,q=$('fBusca').value.trim().toLocaleLowerCase('pt-BR');
+  const lista=pecas.filter(p=>(!cat||p.categoria===cat)&&(!tam||p.tamanho===tam)&&(!est||p.estacao===est)&&(!mar||p.marca===mar)&&(!q||[p.nome,p.categoria,p.marca,p.cor].join(' ').toLocaleLowerCase('pt-BR').includes(q)));
+  $('grid').innerHTML=lista.map(card).join('');
+  $('count').textContent=lista.length+(lista.length===1?' peça':' peças');
+  $('vazio').hidden=lista.length>0;
+}
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function card(p){
+  const rot=((p.rotacao||0)%360+360)%360;
+  const img=p.foto_origem?`<img loading="lazy" src="../fotos/mini/${esc(p.foto_origem)}" alt="${esc(p.nome)}" style="transform:rotate(${rot}deg)">`:'';
+  const tags=[p.tamanho&&`Tamanho ${p.tamanho}`,p.marca,ESTACAO[p.estacao],SERVE[p.serve],p.conservacao&&`Estado: ${p.conservacao}`].filter(Boolean).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+  return `<div class="card"><div class="frame">${img}</div><div class="nome">${esc(p.nome)}</div><div class="info">${esc(p.categoria)}<br>${tags}</div></div>`;
+}
+fetch('../dados/catalogo.json').then(r=>r.json()).then(j=>{
+  pecas=j.pecas.filter(p=>p.situacao==='ativa');
+  opts($('fCat'),uniq(p=>p.categoria));
+  opts($('fTam'),uniq(p=>p.tamanho));
+  opts($('fMar'),uniq(p=>p.marca));
+  ['fCat','fTam','fEst','fMar'].forEach(id=>$(id).addEventListener('change',filtrar));
+  $('fBusca').addEventListener('input',filtrar);
+  filtrar();
+}).catch(()=>{$('count').textContent='Não foi possível carregar as peças agora.'});
+</script>
+</body>
+</html>
