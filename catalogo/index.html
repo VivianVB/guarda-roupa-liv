@@ -56,6 +56,7 @@ nav.abas button[aria-pressed="true"]{background:var(--accent);color:#fff;border-
     <button type="button" data-aba="looks" aria-pressed="false">Looks</button>
     <button type="button" data-aba="compras" aria-pressed="false">Compras</button>
     <button type="button" data-aba="conjuntos" aria-pressed="false">Conjuntos</button>
+    <button type="button" data-aba="conferencia" aria-pressed="false">Conferência</button>
   </nav>
   <div class="count" id="count"></div>
 </header>
@@ -83,6 +84,10 @@ nav.abas button[aria-pressed="true"]{background:var(--accent);color:#fff;border-
       <button type="button" data-est="frio" aria-pressed="false">Frio</button>
     </nav>
     <div id="tabela-compras"></div>
+  </section>
+  <section class="sec" id="s-conferencia" hidden>
+    <p class="hint">Peças que ainda precisam de algum dado, de foto ou de refotografia.</p>
+    <div id="lista-conferencia"></div>
   </section>
   <section class="sec" id="s-conjuntos" hidden>
     <p class="hint">Peças que combinam entre si.</p>
@@ -150,14 +155,24 @@ function renderConjuntos(){
   $('lista-conjuntos').innerHTML=itens.length?itens.map(c=>`<div class="conj"><h3>${esc(c.nome)}</h3><div class="pics">${c.ps.map(p=>`<div>${thumb(p)}</div>`).join('')}</div><div class="info">${c.ps.map(p=>esc(p.nome)).join(' + ')}</div></div>`).join(''):'<p class="hint">Ainda não há conjuntos.</p>';
 }
 
+// ---- conferência ----
+function renderConferencia(){
+  const campos={tamanho:'tamanho',marca:'marca',estacao:'estação',serve:'se serve'};
+  const itens=pecas.map(p=>{const falta=Object.keys(campos).filter(c=>!p[c]||!String(p[c]).trim()).map(c=>campos[c]);
+    if(!p.foto_origem)falta.push('foto');if(p.refotografar)falta.push('refotografar');
+    return {p,falta,aviso:p.aviso}}).filter(x=>x.falta.length||x.aviso);
+  $('lista-conferencia').innerHTML=itens.length?`<p class="hint">${itens.length} ${itens.length===1?'peça':'peças'} para conferir.</p><div class="grid">${itens.map(x=>`<div class="card"><div class="frame">${thumb(x.p)}</div><div class="nome">${esc(x.p.nome)}</div><div class="info">${x.falta.length?'Falta: '+esc(x.falta.join(', ')):''}${x.aviso?'<br>'+esc(x.aviso):''}</div></div>`).join('')}</div>`:'<p class="hint">Nada para conferir agora.</p>';
+}
+
 // ---- abas ----
 function aba(nome){
   document.querySelectorAll('[data-aba]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.aba===nome)));
-  ['catalogo','looks','compras','conjuntos'].forEach(n=>$('s-'+n).hidden=n!==nome);
+  ['catalogo','looks','compras','conjuntos','conferencia'].forEach(n=>$('s-'+n).hidden=n!==nome);
   $('count').hidden=nome!=='catalogo';
   if(nome==='looks')renderLooks();
   if(nome==='compras')renderCompras();
   if(nome==='conjuntos')renderConjuntos();
+  if(nome==='conferencia')renderConferencia();
 }
 document.querySelectorAll('[data-aba]').forEach(b=>b.addEventListener('click',()=>aba(b.dataset.aba)));
 document.querySelectorAll('[data-est]').forEach(b=>b.addEventListener('click',()=>{estCompra=b.dataset.est;renderCompras()}));
